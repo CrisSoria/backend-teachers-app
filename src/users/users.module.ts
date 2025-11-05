@@ -2,7 +2,7 @@ import { Module, NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/c
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchema } from 'src/users/schemas/User.schema';
+import { User, UserSchema } from 'src/users/schemas/user.schema';
 import { ValidMongoIdMiddleware } from '../common/middleware/valid-mongoid.middleware';
 
 @Module({
