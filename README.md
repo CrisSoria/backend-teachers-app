@@ -104,6 +104,7 @@ Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
 - @nestjs/swagger ____________ # Documentación
 - class-validator ____________ # Tipado
 - class-transformer __________ # Tipado
+- @nestjs/config ____________ # Configuración variables de entorno
 
 # Módulos
 
