@@ -1,5 +1,5 @@
 import { ValidateBy, ValidationArguments } from 'class-validator';
-import { AttendanceStatus } from '../enums/attendance-status.enum';
+import { AttendanceStatus } from '../interfaces/attendance-status.enum';
 
 // Helper function to validate a single attendance item
 function validateAttendanceItem(value: any): boolean {

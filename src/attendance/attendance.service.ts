@@ -29,8 +29,8 @@ export class AttendanceService {
         .exec();
     } catch (error) {
       // Log the error for debugging
-      console.error(`Error finding attendances for user ${userid}:`, error);
-      throw new Error('Error retrieving attendance records');
+      console.error(`Error encontrando registros de asistencia para el usuario ${userid}:`, error);
+      throw new Error('Error encontrando registros de asistencia');
     }
   }
   findById(id: string) {

@@ -7,11 +7,12 @@ import {
 } from 'class-validator';
 import { Month } from '../../common/enums/month.enum';
 import { IsDailyAttendance } from '../validators/attendance.validator';
+import mongoose from 'mongoose';
 
 // DTO para cada registro diario de estudiante
 export class DailyAttendanceDto {
-  @IsString()
-  @IsNotEmpty()
+  @IsString({ message: 'El student debe ser una cadena de texto' })
+  @IsNotEmpty({ message: 'El student es obligatorio' })
   student: string;
 
   // Objeto dinámico para los días (1-31)
@@ -20,16 +21,16 @@ export class DailyAttendanceDto {
 
 // DTO principal para crear asistencia
 export class CreateAttendanceDto {
-  @IsMongoId()
-  @IsNotEmpty()
-  userid: string;
+  @IsMongoId({ message: 'El userid debe ser un MongoID válido' })
+  @IsNotEmpty({ message: 'El userid es obligatorio' })
+  userid: mongoose.Types.ObjectId;
 
-  @IsEnum(Month)
-  @IsNotEmpty()
+  @IsEnum(Month, { message: 'El mes proporcionado no es válido' })
+  @IsNotEmpty({ message: 'El mes es obligatorio' })
   month: Month;
 
-  @IsArray()
-  @IsNotEmpty()
+  @IsArray({ message: 'El campo data debe ser un array' })
+  @IsNotEmpty({ message: 'El campo data es obligatorio' })
   @IsDailyAttendance({ each: true })
   data: DailyAttendanceDto[];
 }

@@ -27,17 +27,14 @@ export class AttendanceController {
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @Post()
   async create(@Body() createAttendanceDto: CreateAttendanceDto) {
-    const prevAttendance = await this.attendanceService.findOne(
-      createAttendanceDto.userid,
-      createAttendanceDto.month,
-    );
-    if (prevAttendance) {
+    const attendance = await this.attendanceService.create(createAttendanceDto);
+    console.log(attendance);
+    if (attendance) {
       throw new HttpException(
         'Ya existe una asistencia para este usuario y mes',
         HttpStatus.BAD_REQUEST,
       );
     }
-    const attendance = await this.attendanceService.create(createAttendanceDto);
     return attendance;
   }
 
@@ -48,8 +45,12 @@ export class AttendanceController {
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @Get('user/:id')
-  findAllByUser(@Param('id') id: string) {
-    return this.attendanceService.findAllByUser(id);
+  async findAllByUser(@Param('id') id: string) {
+    const attendance = await this.attendanceService.findAllByUser(id);
+    if (!attendance) {
+      throw new HttpException('Este usuario no tiene asistencias registradas', HttpStatus.NOT_FOUND);
+    }
+    return attendance;
   }
 
   @ApiTags('Attendance')

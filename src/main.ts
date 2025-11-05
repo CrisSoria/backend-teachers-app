@@ -1,14 +1,26 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
     forbidNonWhitelisted: true,
     transform: true,
+    exceptionFactory: (errors) => {
+      const messages = errors.map(error => ({
+        field: error.property,
+        errors: Object.values(error.constraints || {})
+      }));
+      return new BadRequestException({
+        statusCode: 400,
+        message: 'Error de validación',
+        errors: messages
+      });
+    }
   }));
 
   const config = new DocumentBuilder()

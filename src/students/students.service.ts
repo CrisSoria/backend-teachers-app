@@ -1,26 +1,78 @@
-import { Injectable } from '@nestjs/common';
-import { CreateStudentDto } from './dto/create-student.dto';
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { CreateStudentDto, CreateManyStudentsDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Student } from 'src/students/schemas/students.schema';
 
 @Injectable()
 export class StudentsService {
-  create(createStudentDto: CreateStudentDto) {
-    return 'This action adds a new student';
+  constructor(@InjectModel(Student.name) private studentModel: Model<Student>) {}
+
+  async create(createStudentDto: CreateStudentDto) {
+    try {
+      const createdStudent = new this.studentModel(createStudentDto);
+      return await createdStudent.save();
+    } catch (error) {
+      if (error.name === 'ValidationError') {
+        const messages = Object.values(error.errors).map((err: any) => err.message);
+        throw new BadRequestException({
+          statusCode: 400,
+          message: 'Error de validación',
+          errors: messages
+        });
+      }
+      throw error;
+    }
   }
 
-  findAll() {
-    return `This action returns all students`;
+  async createMany(createStudentsDto: CreateManyStudentsDto) {
+    if (!createStudentsDto.students || !Array.isArray(createStudentsDto.students)) {
+      throw new BadRequestException('Se esperaba un array de estudiantes');
+    }
+    
+    try {
+      return await this.studentModel.insertMany(createStudentsDto.students);
+    } catch (error) {
+      if (error.name === 'ValidationError') {
+        const messages = Object.values(error.errors).map((err: any) => err.message);
+        throw new BadRequestException({
+          statusCode: 400,
+          message: 'Error de validación',
+          errors: messages
+        });
+      }
+      throw error;
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} student`;
+  findAllByUser(userId: string) {
+    return this.studentModel.find({ userId: userId }).exec();
   }
 
-  update(id: number, updateStudentDto: UpdateStudentDto) {
-    return `This action updates a #${id} student`;
+  findOne(id: string) {
+    return this.studentModel.findById(id).exec();
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} student`;
+  async update(id: string, updateStudentDto: UpdateStudentDto) {
+    try {
+      return await this.studentModel
+        .findByIdAndUpdate(id, updateStudentDto, { new: true, runValidators: true })
+        .exec();
+    } catch (error) {
+      if (error.name === 'ValidationError') {
+        const messages = Object.values(error.errors).map((err: any) => err.message);
+        throw new BadRequestException({
+          statusCode: 400,
+          message: 'Error de validación',
+          errors: messages
+        });
+      }
+      throw error;
+    }
+  }
+
+  remove(id: string) {
+    return this.studentModel.findByIdAndDelete(id).exec();
   }
 }

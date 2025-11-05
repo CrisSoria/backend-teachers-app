@@ -13,10 +13,11 @@ import {
 import { Type } from 'class-transformer';
 import { Month } from '../../common/enums/month.enum';
 import { IsDailyAttendance } from '../validators/attendance.validator';
+import mongoose from 'mongoose';
 
 export class UpdateAttendanceDto extends PartialType(CreateAttendanceDto) {
   @IsMongoId({ message: 'El userid debe ser un MongoID válido' })
-  userid: string;
+  userid: mongoose.Types.ObjectId;
 
   @IsEnum(Month, { message: 'El mes proporcionado no es válido' })
   month: Month;
