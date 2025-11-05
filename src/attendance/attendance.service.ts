@@ -1,26 +1,52 @@
 import { Injectable } from '@nestjs/common';
 import { CreateAttendanceDto } from './dto/create-attendance.dto';
 import { UpdateAttendanceDto } from './dto/update-attendance.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Attendance } from './schemas/attendance.schema';
+import { Model } from 'mongoose';
+import { Month } from '../common/enums/month.enum';
 
 @Injectable()
 export class AttendanceService {
+  constructor(
+    @InjectModel(Attendance.name) private attendanceModel: Model<Attendance>,
+  ) {}
+
   create(createAttendanceDto: CreateAttendanceDto) {
-    return 'This action adds a new attendance';
+    const createdAttendance = new this.attendanceModel(createAttendanceDto);
+    return createdAttendance.save();
   }
 
   findAll() {
-    return `This action returns all attendance`;
+    return this.attendanceModel.find().exec();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} attendance`;
+  async findAllByUser(userid: string) {
+    try {
+      return await this.attendanceModel
+        .find({ userid })
+        .sort({ month: 1 }) // Sorts by month in ascending order
+        .exec();
+    } catch (error) {
+      // Log the error for debugging
+      console.error(`Error finding attendances for user ${userid}:`, error);
+      throw new Error('Error retrieving attendance records');
+    }
+  }
+  findById(id: string) {
+    return this.attendanceModel.findOne({ _id: id }).exec();
+  }
+  findOne(id: string, month: Month) {
+    return this.attendanceModel.findOne({ userid: id, month }).exec();
   }
 
-  update(id: number, updateAttendanceDto: UpdateAttendanceDto) {
-    return `This action updates a #${id} attendance`;
+  update(id: string, updateAttendanceDto: UpdateAttendanceDto) {
+    return this.attendanceModel
+      .findOneAndUpdate({ _id: id }, updateAttendanceDto, { new: true })
+      .exec();
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} attendance`;
+  remove(id: string) {
+    return this.attendanceModel.findOneAndDelete({ _id: id }).exec();
   }
 }

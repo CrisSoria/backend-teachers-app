@@ -49,7 +49,7 @@ export class UsersController {
   async findOne(@Param('id') id: string) {
     const user = await this.usersService.findOne(id);
     if (!user) {
-      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      throw new HttpException('Usuario no encontrado', HttpStatus.NOT_FOUND);
     }
     return user;
   }
@@ -64,7 +64,7 @@ export class UsersController {
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     const updateUser = await this.usersService.update(id, updateUserDto);
     if (!updateUser) {
-      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      throw new HttpException('Usuario no encontrado', HttpStatus.NOT_FOUND);
     }
     return updateUser;
   }
@@ -79,7 +79,7 @@ export class UsersController {
   async remove(@Param('id') id: string) {
     const deletedUser = await this.usersService.remove(id);
     if (!deletedUser) {
-      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      throw new HttpException('Usuario no encontrado', HttpStatus.NOT_FOUND);
     }
 
     return deletedUser;

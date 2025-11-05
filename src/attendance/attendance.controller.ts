@@ -1,34 +1,120 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { AttendanceService } from './attendance.service';
 import { CreateAttendanceDto } from './dto/create-attendance.dto';
 import { UpdateAttendanceDto } from './dto/update-attendance.dto';
+import { Month } from '../common/enums/month.enum';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @Controller('attendance')
 export class AttendanceController {
   constructor(private readonly attendanceService: AttendanceService) {}
 
+  @ApiTags('Attendance')
+  @ApiOperation({ summary: 'Create attendance' })
+  @ApiResponse({ status: 201, description: 'Attendance created' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   @Post()
-  create(@Body() createAttendanceDto: CreateAttendanceDto) {
-    return this.attendanceService.create(createAttendanceDto);
+  async create(@Body() createAttendanceDto: CreateAttendanceDto) {
+    const prevAttendance = await this.attendanceService.findOne(
+      createAttendanceDto.userid,
+      createAttendanceDto.month,
+    );
+    if (prevAttendance) {
+      throw new HttpException(
+        'Ya existe una asistencia para este usuario y mes',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const attendance = await this.attendanceService.create(createAttendanceDto);
+    return attendance;
   }
 
+  @ApiTags('Attendance')
+  @ApiOperation({ summary: 'Get all attendance by user' })
+  @ApiResponse({ status: 200, description: 'Get all attendance by user' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
+  @Get('user/:id')
+  findAllByUser(@Param('id') id: string) {
+    return this.attendanceService.findAllByUser(id);
+  }
+
+  @ApiTags('Attendance')
+  @ApiOperation({ summary: 'Get attendance by user and month' })
+  @ApiResponse({ status: 200, description: 'Get attendance by user and month' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   @Get()
-  findAll() {
-    return this.attendanceService.findAll();
+  async findOne(@Body('userid') userid: string, @Body('month') month: Month) {
+    const attendance = await this.attendanceService.findOne(userid, month);
+    if (!attendance) {
+      throw new HttpException('Asistencia no encontrada', HttpStatus.NOT_FOUND);
+    }
+    return attendance;
   }
 
+  @ApiTags('Attendance')
+  @ApiOperation({ summary: 'Get attendance by id' })
+  @ApiResponse({ status: 200, description: 'Get attendance by id' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.attendanceService.findOne(+id);
+  async findById(@Param('id') id: string) {
+    const attendance = await this.attendanceService.findById(id);
+    if (!attendance) {
+      throw new HttpException('Asistencia no encontrada', HttpStatus.NOT_FOUND);
+    }
+    return attendance;
   }
 
+  @ApiTags('Attendance')
+  @ApiOperation({ summary: 'Update attendance by id' })
+  @ApiResponse({ status: 200, description: 'Update attendance by id' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAttendanceDto: UpdateAttendanceDto) {
-    return this.attendanceService.update(+id, updateAttendanceDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updateAttendanceDto: UpdateAttendanceDto,
+  ) {
+    const attendance = await this.attendanceService.update(
+      id,
+      updateAttendanceDto,
+    );
+    if (!attendance) {
+      throw new HttpException('Asistencia no encontrada', HttpStatus.NOT_FOUND);
+    }
+    return attendance;
   }
 
+  @ApiTags('Attendance')
+  @ApiOperation({ summary: 'Delete attendance by id' })
+  @ApiResponse({ status: 200, description: 'Delete attendance by id' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.attendanceService.remove(+id);
+  async remove(@Param('id') id: string) {
+    const attendance = await this.attendanceService.remove(id);
+    if (!attendance) {
+      throw new HttpException('Asistencia no encontrada', HttpStatus.NOT_FOUND);
+    }
+    return attendance;
   }
 }
