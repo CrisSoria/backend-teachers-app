@@ -105,6 +105,11 @@ Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
 - class-validator ____________ # Tipado
 - class-transformer __________ # Tipado
 - @nestjs/config ____________ # Configuración variables de entorno
+- bcrypt ____________ # Encriptación
+
+## Dev Dependencies
+`npm i -D @types/bcrypt`
+- @types/bcrypt ____________ # tipado solo para Encriptación
 
 # Módulos
 
