@@ -1,6 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { StudentsGender } from '../interfaces/students-gender.enum';
 import * as mongoose from 'mongoose';
+import { Document, Types } from 'mongoose';
+
+export type StudentDocument = Student & Document<Types.ObjectId>;
 
 @Schema()
 export class Student {
@@ -13,13 +16,15 @@ export class Student {
   @Prop({ required: true })
   birthdate: Date;
 
-  @Prop({ 
-    required: false, 
+  @Prop({
+    required: false,
     enum: {
       values: Object.values(StudentsGender),
-      message: 'El género debe ser uno de los siguientes valores: ' + Object.values(StudentsGender).join(', ')
+      message:
+        'El género debe ser uno de los siguientes valores: ' +
+        Object.values(StudentsGender).join(', '),
     },
-    type: String 
+    type: String,
   })
   gender: StudentsGender;
 

@@ -2,14 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { CreateAttendanceDto } from './dto/create-attendance.dto';
 import { UpdateAttendanceDto } from './dto/update-attendance.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { Attendance } from './schemas/attendance.schema';
+import { Attendance, AttendanceDocument } from './schemas/attendance.schema';
 import { Model } from 'mongoose';
 import { Month } from '../common/enums/month.enum';
 
 @Injectable()
 export class AttendanceService {
   constructor(
-    @InjectModel(Attendance.name) private attendanceModel: Model<Attendance>,
+    @InjectModel(Attendance.name) private attendanceModel: Model<AttendanceDocument>,
   ) {}
 
   create(createAttendanceDto: CreateAttendanceDto) {
