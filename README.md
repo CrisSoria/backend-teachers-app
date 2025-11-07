@@ -101,15 +101,23 @@ Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
 
 - @nestjs/mongoose
 - mongoose
-- @nestjs/swagger ____________ # Documentación
+- @nestjs/swagger __________# Documentación
 - class-validator ____________ # Tipado
-- class-transformer __________ # Tipado
-- @nestjs/config ____________ # Configuración variables de entorno
-- bcrypt ____________ # Encriptación
+- class-transformer _________ # Tipado
+- @nestjs/config ___________ # Configuración variables de entorno
+- bcrypt ____________________ # Encriptación
+- @nestjs/passport ________ # Autenticación
+- passport _________________ # Autenticación
+- passport-local ___________ # Autenticación
+- @nestjs/jwt _____________ # Autenticación
+- passport-jwt _____________ # Autenticación
 
 ## Dev Dependencies
-`npm i -D @types/bcrypt`
-- @types/bcrypt ____________ # tipado solo para Encriptación
+`npm i -D packageName`
+`npm i --save-dev packageName`
+- @types/bcrypt ____________ # tipado para Encriptación
+- @types/passport-local____ # tipado para Autenticación
+- @types/passport-jwt______ # tipado para Autenticación
 
 # Módulos
 

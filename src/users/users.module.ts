@@ -11,6 +11,7 @@ import { ValidMongoIdMiddleware } from '../common/middleware/valid-mongoid.middl
   imports: [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
+  exports: [UsersService],
 })
 export class UsersModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

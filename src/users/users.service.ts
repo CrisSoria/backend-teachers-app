@@ -254,25 +254,34 @@ export class UsersService {
   // Métodos adicionales útiles
 
   async findByEmail(email: string): Promise<User | null> {
-    try {
-      this.logger.log(`Buscando usuario por email: ${email}`);
-      const user = await this.userModel.findOne({ email }).exec();
-      return user ? this.removePassword(user.toObject()) : null;
-    } catch (error) {
-      this.logger.error(
-        `Error al buscar usuario por email: ${error.message}`,
-        error.stack,
-      );
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          message: 'Error al buscar usuario por email',
-          error: error.message,
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+  try {
+    this.logger.log(`Buscando usuario por email: ${email}`);
+    
+    // ⭐ CAMBIO CRÍTICO: No usar .lean() para mantener el password
+    const user = await this.userModel.findOne({ email }).exec();
+    
+    if (!user) {
+      return null;
     }
+    
+    // Retornar el objeto plain con password incluido (necesario para bcrypt.compare)
+    return user.toObject();
+  } catch (error) {
+    this.logger.error(
+      `Error al buscar usuario por email: ${error.message}`,
+      error.stack,
+    );
+    throw new HttpException(
+      {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Error al buscar usuario por email',
+        error: error.message,
+      },
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
   }
+}
+
 
   async existsByEmail(email: string): Promise<boolean> {
     try {
@@ -294,7 +303,7 @@ export class UsersService {
     }
   }
 
-  private removePassword(user: any): User {
+  public removePassword(user: any): User {
     const { password, ...result } = user;
     return result as User;
   }
