@@ -5,6 +5,7 @@ import { AttendanceModule } from './attendance/attendance.module';
 import { StudentsModule } from './students/students.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { AuthModule } from './auth/auth.module';
     AttendanceModule,
     StudentsModule,
     AuthModule,
+    EmailModule,
   ],
 })
 export class AppModule {}

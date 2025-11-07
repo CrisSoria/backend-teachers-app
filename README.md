@@ -111,6 +111,7 @@ Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
 - passport-local ___________ # Autenticación
 - @nestjs/jwt _____________ # Autenticación
 - passport-jwt _____________ # Autenticación
+- nodemailer _____________ # Envio de correo electrónico
 
 ## Dev Dependencies
 `npm i -D packageName`
@@ -118,6 +119,7 @@ Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
 - @types/bcrypt ____________ # tipado para Encriptación
 - @types/passport-local____ # tipado para Autenticación
 - @types/passport-jwt______ # tipado para Autenticación
+- @types/nodemailer______ # tipado para envio de correo electrónico
 
 # Módulos
 
@@ -125,4 +127,5 @@ Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
 - users.module.ts
 - students.module.ts
 - attendance.module.ts
-- 
+- auth.module.ts
+- email.module.ts
