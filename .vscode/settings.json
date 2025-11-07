@@ -1,0 +1,16 @@
+{
+  "symbols.files.associations": {
+    "*.controller.ts": "nest-controller",
+    "*.module.ts": "nest-module",
+    "*.dto.ts": "nest-dto",
+    "*.exception.ts": "nest-exception",
+    "*.pipe.ts": "nest-pipe",
+    "*.guard.ts": "nest-guard",
+    "*.interceptor.ts": "nest-interceptor",
+    "*.middleware.ts": "nest-middleware",
+    "*.resolver.ts": "nest-resolver",
+    "*.service.ts": "nest-service",
+    "*.gateway.ts": "nest-gateway",
+    "*.subscriber.ts": "nest-subscriber"
+  }
+}

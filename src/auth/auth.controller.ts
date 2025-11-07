@@ -1,0 +1,238 @@
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Request,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+  Headers,
+} from '@nestjs/common';
+import { AuthService } from './auth.service';
+import { LocalAuthGuard } from './guards/local-auth.guard';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiBody,
+  ApiHeader,
+} from '@nestjs/swagger';
+
+@ApiTags('Authentication')
+@Controller('auth')
+export class AuthController {
+  constructor(private authService: AuthService) {}
+
+  /**
+   * Registro de nuevo usuario
+   * POST /auth/register
+   */
+  @Post('register')
+  @ApiOperation({ summary: 'Registrar nuevo usuario' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: {
+          type: 'string',
+          example: 'user@example.com',
+        },
+        password: {
+          type: 'string',
+          example: 'Password123!',
+        },
+        name: {
+          type: 'string',
+          example: 'John Doe',
+        },
+        role: {
+          type: 'string',
+          example: 'teacher',
+        },
+        status: {
+          type: 'string',
+          example: 'active',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Usuario registrado exitosamente' })
+  @ApiResponse({ status: 400, description: 'Datos inválidos' })
+  @ApiResponse({ status: 401, description: 'Email ya registrado' })
+  async register(@Body() createUserDto: CreateUserDto) {
+    return this.authService.register(createUserDto);
+  }
+
+  /**
+   * Login de usuario
+   * POST /auth/login
+   * Retorna access_token y refresh_token
+   */
+  @UseGuards(LocalAuthGuard)
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Iniciar sesión' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: {
+          type: 'string',
+          example: 'user@example.com',
+        },
+        password: {
+          type: 'string',
+          example: 'Password123!',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Login exitoso',
+    schema: {
+      example: {
+        access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        refresh_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        expires_in: 900,
+        user: {
+          id: '507f1f77bcf86cd799439011',
+          email: 'user@example.com',
+          name: 'John Doe',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 401, description: 'Credenciales inválidas' })
+  async login(@Request() req) {
+    return this.authService.login(req.user);
+  }
+
+  /**
+   * Renovar access token usando refresh token
+   * POST /auth/refresh
+   */
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Renovar access token' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        refresh_token: {
+          type: 'string',
+          example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Token renovado exitosamente',
+    schema: {
+      example: {
+        access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        expires_in: 900,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Refresh token inválido o expirado',
+  })
+  async refresh(@Body('refresh_token') refreshToken: string) {
+    return this.authService.refreshAccessToken(refreshToken);
+  }
+
+  /**
+   * Cerrar sesión actual
+   * POST /auth/logout
+   * Invalida el access token actual y elimina el refresh token
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Cerrar sesión' })
+  @ApiHeader({
+    name: 'Authorization',
+    description: 'Bearer <token>',
+    required: true,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Sesión cerrada exitosamente',
+    schema: {
+      example: {
+        message: 'Sesión cerrada exitosamente',
+        success: true,
+      },
+    },
+  })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  async logout(@Request() req, @Headers('authorization') authHeader: string) {
+    // Extraer el token del header "Bearer <token>"
+    const token = authHeader?.replace('Bearer ', '');
+
+    if (!token) {
+      return {
+        message: 'Token no proporcionado',
+        success: false,
+      };
+    }
+
+    return this.authService.logout(req.user.userId, token);
+  }
+
+  /**
+   * Cerrar todas las sesiones del usuario
+   * POST /auth/logout-all
+   * Útil para cambio de contraseña o seguridad
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('logout-all')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Cerrar todas las sesiones del usuario' })
+  @ApiResponse({
+    status: 200,
+    description: 'Todas las sesiones cerradas exitosamente',
+  })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  async logoutAll(@Request() req) {
+    return this.authService.logoutAllSessions(req.user.userId);
+  }
+
+  /**
+   * Obtener perfil del usuario autenticado
+   * GET /auth/profile
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Obtener perfil del usuario autenticado' })
+  @ApiResponse({ status: 200, description: 'Perfil obtenido exitosamente' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  async getProfile(@Request() req) {
+    return req.user;
+  }
+
+  /**
+   * TODO: Implementar de ser necesario
+   * Obtener información completa del usuario desde BD
+   * GET /auth/me
+   */
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Obtener información completa del usuario' })
+  @ApiResponse({ status: 200, description: 'Usuario obtenido exitosamente' })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  async getCurrentUser(@Request() req) {
+    return req.user;
+  }
+}
