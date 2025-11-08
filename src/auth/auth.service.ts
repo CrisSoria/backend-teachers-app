@@ -9,6 +9,8 @@ import { Token, TokenDocument } from './schemas/token.schema';
 import { ConfigService } from '@nestjs/config';
 import { OtpService } from 'src/otp/otp.service';
 import { UserStatus } from 'src/users/interfaces/user-status-enum';
+import { RegisterUserDto } from './dto/register-user.dto';
+import { UserRole } from 'src/users/interfaces/user-role.enum';
 
 @Injectable()
 export class AuthService {
@@ -189,16 +191,21 @@ export class AuthService {
   /**
    * Registra un nuevo usuario
    */
-  async register(createUserDto: any) {
+  async register(registerUserDto: RegisterUserDto) {
     try {
-      this.logger.log(`Registrando nuevo usuario: ${createUserDto.email}`);
+      this.logger.log(`Registrando nuevo usuario: ${registerUserDto.email}`);
+      const user = {
+        ...registerUserDto,
+        role: UserRole.FREE,
+        status: UserStatus.UNVERIFIED,
+      };
 
-      const newUser = await this.usersService.create(createUserDto);
+      const newUser = await this.usersService.create(user);
 
       this.logger.log(`Usuario registrado exitosamente: ${newUser.email}`);
 
-      // Generar tokens para login automático después del registro
-      return this.login(newUser);
+      // Generar OTP para validación automático después del registro
+      return this.otpService.generateOTP(newUser.email);
     } catch (error) {
       this.logger.error(
         `Error al registrar usuario: ${error.message}`,

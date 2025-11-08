@@ -12,7 +12,7 @@ import {
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { RegisterUserDto } from './dto/register-user.dto';
 import {
   ApiTags,
   ApiOperation,
@@ -49,22 +49,14 @@ export class AuthController {
           type: 'string',
           example: 'John Doe',
         },
-        role: {
-          type: 'string',
-          example: 'teacher',
-        },
-        status: {
-          type: 'string',
-          example: 'active',
-        },
       },
     },
   })
   @ApiResponse({ status: 201, description: 'Usuario registrado exitosamente' })
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'Email ya registrado' })
-  async register(@Body() createUserDto: CreateUserDto) {
-    return this.authService.register(createUserDto);
+  async register(@Body() registerUserDto: RegisterUserDto) {
+    return this.authService.register(registerUserDto);
   }
 
   /**

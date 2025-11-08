@@ -130,3 +130,10 @@ Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
 - auth.module.ts
 - email.module.ts
 - otp.module.ts
+
+
+# OTP Flow
+1. el usuario se registra con status UNVERIFIED
+2. se envia un OTP al correo del usuario
+3. el usuario valida el OTP y cambia su status a ACTIVE
+4. el usuario se autentica
