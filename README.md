@@ -129,3 +129,4 @@ Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
 - attendance.module.ts
 - auth.module.ts
 - email.module.ts
+- otp.module.ts

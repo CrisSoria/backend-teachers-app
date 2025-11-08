@@ -76,6 +76,7 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Iniciar sesión' })
+  //TODO: recibe un OTP opcional
   @ApiBody({
     schema: {
       type: 'object',
@@ -87,6 +88,10 @@ export class AuthController {
         password: {
           type: 'string',
           example: 'Password123!',
+        },
+        otp: {
+          type: 'string',
+          example: '123456',
         },
       },
     },

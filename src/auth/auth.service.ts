@@ -22,6 +22,7 @@ export class AuthService {
   /**
    * Valida las credenciales del usuario (usado por LocalStrategy)
    */
+  //TODO: Implementar validación de OTP
   async validateUser(email: string, password: string): Promise<any> {
     try {
       this.logger.log(`Validando usuario con email: ${email}`);
