@@ -1,4 +1,4 @@
-import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, Logger, HttpException, HttpStatus, UnauthorizedException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -303,6 +303,27 @@ export class UsersService {
     }
   }
 
+  /*
+  * Valida la contraseña del usuario
+  */
+  async validatePassword(email: string, password: string): Promise<User> {
+    const user = await this.findByEmail(email);
+    if (!user) {
+      this.logger.warn(`Usuario no encontrado: ${email}`);
+      throw new UserNotFoundException(email);
+    }
+    const isPasswordValid = await bcrypt.compare(password, user.password || '');
+    if (!isPasswordValid) {
+      this.logger.warn(`Contraseña incorrecta para: ${email}`);
+      throw new UnauthorizedException('Credenciales inválidas');
+    }
+    // findByEmail retorna el objeto plain con password incluido
+    return this.removePassword(user);
+  }
+
+  /*
+  * Quita la contraseña del usuario para que no se envie en las respuestas
+  */
   public removePassword(user: any): User {
     const { password, ...result } = user;
     return result as User;

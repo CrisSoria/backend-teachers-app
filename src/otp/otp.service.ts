@@ -15,7 +15,7 @@ export class OtpService {
     @InjectModel(Otp.name) private otpModel: Model<OtpDocument>,
   ) {}
 
-  async generateOTP(email: string): Promise<Otp> {
+  async generateOTP(email: string): Promise<Omit<Otp, 'token'>> {
     const token = Math.floor(100000 + Math.random() * 900000).toString();
     // Encriptar el token
     const hashedToken = await bcrypt.hash(token, 10);
@@ -38,7 +38,10 @@ export class OtpService {
         subject: 'Código de verificación',
         html: `<p>Tu código de verificación es: ${token}</p>`,
       });
-      return savedOtp; //TODO: revisar si es necesario enviar el OTP como respuesta
+
+      // Devolvemos el OTP sin el token por seguridad
+      const { token: _, ...otpWithoutToken } = savedOtp.toObject();
+      return otpWithoutToken as Omit<Otp, 'token'>;
     } catch (error) {
       this.logger.error(`Error al crear OTP: ${error.message}`, error.stack);
       throw new HttpException(
@@ -66,15 +69,5 @@ export class OtpService {
     const isValidOTP = await bcrypt.compare(token, otp.token);
     this.logger.log(`OTP is valid: ${isValidOTP}`);
     return isValidOTP;
-  }
-
-  //TODO: implementar o eliminar
-  findOne(id: number) {
-    return `This action returns a #${id} otp`;
-  }
-
-  //TODO: implementar o eliminar
-  remove(id: number) {
-    return `This action removes a #${id} otp`;
   }
 }

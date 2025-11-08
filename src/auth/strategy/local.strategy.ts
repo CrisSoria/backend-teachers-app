@@ -1,7 +1,8 @@
 import { Strategy } from 'passport-local';
 import { PassportStrategy } from '@nestjs/passport';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { AuthService } from '../auth.service';
+import { Request } from 'express';
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
@@ -9,15 +10,14 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     super({
       usernameField: 'email', // IMPORTANTE: Usar 'email' porque mi DTO usa email, no username
       passwordField: 'password',
+      passReqToCallback: true, // Permite acceder al request en validate para obtener el OTP
     });
   }
 
-  //TODO: recibe un OTP opcional
-  async validate(email: string, password: string): Promise<any> {
-    const user = await this.authService.validateUser(email, password);
-    if (!user) {
-      throw new UnauthorizedException('Credenciales inválidas');
-    }
+  async validate(req: Request, email: string, password: string): Promise<any> {
+    const otp = req.body?.otp; // Get OTP from request body
+    const user = await this.authService.validateUser(email, password, otp);
+
     return user;
   }
 }

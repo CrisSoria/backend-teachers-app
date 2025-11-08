@@ -76,26 +76,21 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Iniciar sesión' })
-  //TODO: recibe un OTP opcional
   @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        email: {
-          type: 'string',
-          example: 'user@example.com',
-        },
-        password: {
-          type: 'string',
-          example: 'Password123!',
-        },
-        otp: {
-          type: 'string',
-          example: '123456',
-        },
-      },
-    },
-  })
+  schema: {
+    type: 'object',
+    properties: {
+      email: { type: 'string', example: 'user@example.com' },
+      password: { type: 'string', example: 'password123' },
+      otp: { 
+        type: 'string', 
+        description: 'Required only for UNVERIFIED users',
+        example: '123456',
+        required: ["false"] 
+      }
+    }
+  }
+})
   @ApiResponse({
     status: 200,
     description: 'Login exitoso',
