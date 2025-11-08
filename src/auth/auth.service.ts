@@ -7,6 +7,10 @@ import * as bcrypt from 'bcrypt';
 import { IPayload } from './interfaces/payload.interface';
 import { Token, TokenDocument } from './schemas/token.schema';
 import { ConfigService } from '@nestjs/config';
+import { OtpService } from 'src/otp/otp.service';
+import { UserStatus } from 'src/users/interfaces/user-status-enum';
+import { RegisterUserDto } from './dto/register-user.dto';
+import { UserRole } from 'src/users/interfaces/user-role.enum';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +19,7 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private otpService: OtpService,
     private configService: ConfigService,
     @InjectModel(Token.name) private tokenModel: Model<TokenDocument>,
   ) {}
@@ -22,31 +27,35 @@ export class AuthService {
   /**
    * Valida las credenciales del usuario (usado por LocalStrategy)
    */
-  async validateUser(email: string, password: string): Promise<any> {
+  async validateUser(
+    email: string,
+    password: string,
+    otp?: string,
+  ): Promise<any> {
     try {
-      this.logger.log(`Validando usuario con email: ${email}`);
+      this.logger.log(`Validando usuario con email: ${email} | OTP: ${otp}`);
 
-      const user = await this.usersService.findByEmail(email);
+      const user = await this.usersService.validatePassword(email, password);
+      this.logger.log(`Password validado exitosamente. Estado: ${user.status}`);
 
-      if (!user) {
-        this.logger.warn(`Usuario no encontrado: ${email}`);
-        return null;
+      if (user.status === UserStatus.INACTIVE) {
+        throw new UnauthorizedException('Cuenta inactiva');
       }
 
-      const isPasswordValid = await bcrypt.compare(
-        password,
-        user.password || '',
-      );
-
-      if (!isPasswordValid) {
-        this.logger.warn(`Contraseña incorrecta para: ${email}`);
-        return null;
+      // El usuario es nuevo y debe validar su OTP
+      if (user.status === UserStatus.UNVERIFIED) {
+        if (!otp) {
+          throw new UnauthorizedException('OTP es requerido');
+        }
+        const isValidOTP = await this.otpService.validateOTP(email, otp);
+        if (!isValidOTP) {
+          throw new UnauthorizedException('OTP inválido');
+        }
+        // El OTP es válido, actualizamos el estado del usuario
+        await this.usersService.update(user._id.toString(), { status: UserStatus.ACTIVE });
       }
 
-      this.logger.log(`Usuario validado exitosamente: ${email}`);
-
-      const { password: _, ...result } = user;
-      return result;
+      return user;
     } catch (error) {
       this.logger.error(
         `Error al validar usuario: ${error.message}`,
@@ -182,16 +191,21 @@ export class AuthService {
   /**
    * Registra un nuevo usuario
    */
-  async register(createUserDto: any) {
+  async register(registerUserDto: RegisterUserDto) {
     try {
-      this.logger.log(`Registrando nuevo usuario: ${createUserDto.email}`);
+      this.logger.log(`Registrando nuevo usuario: ${registerUserDto.email}`);
+      const user = {
+        ...registerUserDto,
+        role: UserRole.FREE,
+        status: UserStatus.UNVERIFIED,
+      };
 
-      const newUser = await this.usersService.create(createUserDto);
+      const newUser = await this.usersService.create(user);
 
       this.logger.log(`Usuario registrado exitosamente: ${newUser.email}`);
 
-      // Generar tokens para login automático después del registro
-      return this.login(newUser);
+      // Generar OTP para validación automático después del registro
+      return this.otpService.generateOTP(newUser.email);
     } catch (error) {
       this.logger.error(
         `Error al registrar usuario: ${error.message}`,

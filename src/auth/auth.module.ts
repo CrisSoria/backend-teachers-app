@@ -9,10 +9,12 @@ import { LocalStrategy } from './strategy/local.strategy';
 import { JwtStrategy } from './strategy/jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Token, TokenSchema } from './schemas/token.schema';
+import { OtpModule } from 'src/otp/otp.module';
 
 @Module({
   imports: [
     UsersModule,
+    OtpModule,
     PassportModule,
     // Registrar el schema de Token
     MongooseModule.forFeature([
