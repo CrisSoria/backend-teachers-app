@@ -21,13 +21,14 @@ import {
   ApiBody,
   ApiHeader,
 } from '@nestjs/swagger';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  /**
+  /*
    * Registro de nuevo usuario
    * POST /auth/register
    */
@@ -56,10 +57,17 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Datos inválidos' })
   @ApiResponse({ status: 401, description: 'Email ya registrado' })
   async register(@Body() registerUserDto: RegisterUserDto) {
-    return this.authService.register(registerUserDto);
+    const { newUser, otp } = await this.authService.register(registerUserDto);
+    return {
+        message:
+          'Usuario registrado exitosamente. Se ha enviado el código para verificar la cuenta al email: ' +
+          newUser.email,
+        newUser,
+        otp,
+      };
   }
 
-  /**
+  /*
    * Login de usuario
    * POST /auth/login
    * Retorna access_token y refresh_token
@@ -69,20 +77,20 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Iniciar sesión' })
   @ApiBody({
-  schema: {
-    type: 'object',
-    properties: {
-      email: { type: 'string', example: 'user@example.com' },
-      password: { type: 'string', example: 'password123' },
-      otp: { 
-        type: 'string', 
-        description: 'Required only for UNVERIFIED users',
-        example: '123456',
-        required: ["false"] 
-      }
-    }
-  }
-})
+    schema: {
+      type: 'object',
+      properties: {
+        email: { type: 'string', example: 'user@example.com' },
+        password: { type: 'string', example: 'password123' },
+        otp: {
+          type: 'string',
+          description: 'Required only for UNVERIFIED users',
+          example: '123456',
+          required: ['false'],
+        },
+      },
+    },
+  })
   @ApiResponse({
     status: 200,
     description: 'Login exitoso',
@@ -104,7 +112,7 @@ export class AuthController {
     return this.authService.login(req.user);
   }
 
-  /**
+  /*
    * Renovar access token usando refresh token
    * POST /auth/refresh
    */
@@ -140,7 +148,7 @@ export class AuthController {
     return this.authService.refreshAccessToken(refreshToken);
   }
 
-  /**
+  /*
    * Cerrar sesión actual
    * POST /auth/logout
    * Invalida el access token actual y elimina el refresh token
@@ -180,7 +188,7 @@ export class AuthController {
     return this.authService.logout(req.user.userId, token);
   }
 
-  /**
+  /*
    * Cerrar todas las sesiones del usuario
    * POST /auth/logout-all
    * Útil para cambio de contraseña o seguridad
@@ -199,7 +207,7 @@ export class AuthController {
     return this.authService.logoutAllSessions(req.user.userId);
   }
 
-  /**
+  /*
    * Obtener perfil del usuario autenticado
    * GET /auth/profile
    */
@@ -213,18 +221,22 @@ export class AuthController {
     return req.user;
   }
 
-  /**
-   * TODO: Implementar de ser necesario
-   * Obtener información completa del usuario desde BD
-   * GET /auth/me
+  /*
+   * Cambio de contraseña
+   * POST /auth/change-password
+   * @params 
+   *    token OTP generado previamente
+   *    newPassword
+   *    email del usuario que solicita el cambio
+   * Retorna el usuario y los tokens
    */
-  @UseGuards(JwtAuthGuard)
-  @Get('me')
+  @Post('change-password')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Obtener información completa del usuario' })
-  @ApiResponse({ status: 200, description: 'Usuario obtenido exitosamente' })
+  @ApiOperation({ summary: 'Cambio de contraseña' })
+  @ApiResponse({ status: 200, description: 'Cambio de contraseña exitoso' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
-  async getCurrentUser(@Request() req) {
-    return req.user;
+  async changePassword(@Body() changePasswordDto: ChangePasswordDto) {
+    const { token, newPassword, email } = changePasswordDto;
+    return this.authService.changePassword(token, newPassword, email);
   }
 }

@@ -1,4 +1,10 @@
-import { Injectable, Logger, HttpException, HttpStatus, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  HttpException,
+  HttpStatus,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -25,9 +31,7 @@ export class UsersService {
         `Intentando crear usuario con email: ${createUserDto.email}`,
       );
       // Encriptar la contraseña
-      const salt = await bcrypt.genSalt();
-      const hashedPassword = await bcrypt.hash(createUserDto.password, salt);
-      createUserDto.password = hashedPassword;
+      createUserDto.password = await this.hashPassword(createUserDto.password);
 
       const createdUser = new this.userModel(createUserDto);
       const savedUser = await createdUser.save();
@@ -145,21 +149,11 @@ export class UsersService {
     try {
       this.logger.log(`Actualizando usuario con ID: ${id}`);
 
-      // Verificar si el usuario existe
-      const existingUser = await this.userModel.findById(id).exec();
-      if (!existingUser) {
-        throw new UserNotFoundException(id);
-      }
-
-      // Si se está actualizando el email, verificar que no exista
-      if (updateUserDto.email && updateUserDto.email !== existingUser.email) {
-        const emailExists = await this.userModel
-          .findOne({ email: updateUserDto.email })
-          .exec();
-
-        if (emailExists) {
-          throw new UserEmailAlreadyExistsException(updateUserDto.email);
-        }
+      // si viene la contraseña la encriptamos
+      if (updateUserDto.password) {
+        updateUserDto.password = await this.hashPassword(
+          updateUserDto.password,
+        );
       }
 
       const updatedUser = await this.userModel
@@ -213,6 +207,42 @@ export class UsersService {
       );
     }
   }
+  /*
+   * cambio de contraseña
+   */
+  async changePassword(email: string, newPassword: string) {
+    try {
+      this.logger.log(`Cambiando contraseña para usuario con email: ${email}`);
+      // encriptamos la contraseña
+      const hashedPassword = await this.hashPassword(newPassword);
+      // actualizamos el password
+      const user = await this.userModel.findOneAndUpdate(
+        { email }, // busqueda por email
+        { password: hashedPassword }, // actualizacion del password
+        { new: true }, // retornar el nuevo usuario
+      );
+      this.logger.log(
+        `Contraseña cambiada exitosamente para usuario con email: ${email}`,
+      );
+      if (!user) {
+        throw new UserNotFoundException(email);
+      }
+      return this.removePassword(user.toObject());
+    } catch (error) {
+      this.logger.error(
+        `Error al cambiar la contraseña: ${error.message}`,
+        error.stack,
+      );
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: 'Error al cambiar la contraseña',
+          error: error.message,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 
   async remove(id: string): Promise<User> {
     try {
@@ -254,34 +284,33 @@ export class UsersService {
   // Métodos adicionales útiles
 
   async findByEmail(email: string): Promise<User | null> {
-  try {
-    this.logger.log(`Buscando usuario por email: ${email}`);
-    
-    // ⭐ CAMBIO CRÍTICO: No usar .lean() para mantener el password
-    const user = await this.userModel.findOne({ email }).exec();
-    
-    if (!user) {
-      return null;
-    }
-    
-    // Retornar el objeto plain con password incluido (necesario para bcrypt.compare)
-    return user.toObject();
-  } catch (error) {
-    this.logger.error(
-      `Error al buscar usuario por email: ${error.message}`,
-      error.stack,
-    );
-    throw new HttpException(
-      {
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: 'Error al buscar usuario por email',
-        error: error.message,
-      },
-      HttpStatus.INTERNAL_SERVER_ERROR,
-    );
-  }
-}
+    try {
+      this.logger.log(`Buscando usuario por email: ${email}`);
 
+      // CAMBIO CRÍTICO: No usar .lean() para mantener el password
+      const user = await this.userModel.findOne({ email }).exec();
+
+      if (!user) {
+        return null;
+      }
+
+      // Retornar el objeto plain con password incluido (necesario para bcrypt.compare)
+      return user.toObject();
+    } catch (error) {
+      this.logger.error(
+        `Error al buscar usuario por email: ${error.message}`,
+        error.stack,
+      );
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: 'Error al buscar usuario por email',
+          error: error.message,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 
   async existsByEmail(email: string): Promise<boolean> {
     try {
@@ -304,8 +333,8 @@ export class UsersService {
   }
 
   /*
-  * Valida la contraseña del usuario
-  */
+   * Valida la contraseña del usuario
+   */
   async validatePassword(email: string, password: string): Promise<User> {
     const user = await this.findByEmail(email);
     if (!user) {
@@ -322,10 +351,15 @@ export class UsersService {
   }
 
   /*
-  * Quita la contraseña del usuario para que no se envie en las respuestas
-  */
+   * Quita la contraseña del usuario para que no se envie en las respuestas
+   */
   public removePassword(user: any): User {
     const { password, ...result } = user;
     return result as User;
+  }
+
+  private async hashPassword(password: string): Promise<string> {
+    const salt = await bcrypt.genSalt();
+    return bcrypt.hash(password, salt);
   }
 }

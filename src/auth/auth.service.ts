@@ -1,4 +1,10 @@
-import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  Logger,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -24,7 +30,7 @@ export class AuthService {
     @InjectModel(Token.name) private tokenModel: Model<TokenDocument>,
   ) {}
 
-  /**
+  /*
    * Valida las credenciales del usuario (usado por LocalStrategy)
    */
   async validateUser(
@@ -52,7 +58,9 @@ export class AuthService {
           throw new UnauthorizedException('OTP inválido');
         }
         // El OTP es válido, actualizamos el estado del usuario
-        await this.usersService.update(user._id.toString(), { status: UserStatus.ACTIVE });
+        await this.usersService.update(user._id.toString(), {
+          status: UserStatus.ACTIVE,
+        });
       }
 
       return user;
@@ -65,7 +73,7 @@ export class AuthService {
     }
   }
 
-  /**
+  /*
    * Genera access token y refresh token después de validar el usuario
    */
   async login(user: any) {
@@ -102,7 +110,7 @@ export class AuthService {
     };
   }
 
-  /**
+  /*
    * Renueva el access token usando el refresh token
    */
   async refreshAccessToken(refreshToken: string) {
@@ -150,7 +158,7 @@ export class AuthService {
     }
   }
 
-  /**
+  /*
    * Cierra sesión invalidando el access token y eliminando el refresh token
    */
   async logout(userId: string, accessToken: string) {
@@ -188,8 +196,10 @@ export class AuthService {
     }
   }
 
-  /**
+  /*
    * Registra un nuevo usuario
+   * @param registerUserDto
+   * @returns newUser + OTP
    */
   async register(registerUserDto: RegisterUserDto) {
     try {
@@ -205,7 +215,8 @@ export class AuthService {
       this.logger.log(`Usuario registrado exitosamente: ${newUser.email}`);
 
       // Generar OTP para validación automático después del registro
-      return this.otpService.generateOTP(newUser.email);
+      const otp = await this.otpService.generateOTP(newUser.email);
+      return { newUser, otp };
     } catch (error) {
       this.logger.error(
         `Error al registrar usuario: ${error.message}`,
@@ -215,7 +226,7 @@ export class AuthService {
     }
   }
 
-  /**
+  /*
    * Valida un token JWT y verifica que no esté en blacklist
    */
   async validateToken(token: string) {
@@ -238,7 +249,7 @@ export class AuthService {
     }
   }
 
-  /**
+  /*
    * Guarda el refresh token en la base de datos
    */
   private async saveRefreshToken(userId: string, refreshToken: string) {
@@ -268,7 +279,7 @@ export class AuthService {
     }
   }
 
-  /**
+  /*
    * Cierra todas las sesiones del usuario (útil para cambio de contraseña)
    */
   async logoutAllSessions(userId: string) {
@@ -286,6 +297,47 @@ export class AuthService {
     } catch (error) {
       this.logger.error(`Error al cerrar todas las sesiones: ${error.message}`);
       throw error;
+    }
+  }
+
+  /*
+   * cambio de contraseña
+   */
+  async changePassword(token: string, newPassword: string, email: string) {
+    try {
+      this.logger.log(`Se valida token: ${token}`);
+      const isValidOTP = this.otpService.validateOTP(email, token);
+      if (!isValidOTP) {
+        throw new UnauthorizedException('OTP inválido');
+      }
+      this.logger.log(`Se actualiza contraseña`);
+      const user = await this.usersService.changePassword(email, newPassword);
+      this.logger.log(
+        `Contraseña cambiada exitosamente para usuario con email: ${email}`,
+      );
+      this.logger.log(`Se generan nuevos tokens`);
+      const { access_token, refresh_token } = await this.login(user);
+      return {
+        message: 'Contraseña cambiada exitosamente',
+        success: true,
+        user,
+        access_token,
+        refresh_token,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error al cambiar la contraseña: ${error.message}`,
+        error.stack,
+      );
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          message:
+            'Error al cambiar la contraseña de ' + email + ' con OTP ' + token,
+          error: error.message,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }

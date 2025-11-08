@@ -12,10 +12,10 @@ import {
 import { AttendanceService } from './attendance.service';
 import { CreateAttendanceDto } from './dto/create-attendance.dto';
 import { UpdateAttendanceDto } from './dto/update-attendance.dto';
-import { Month } from '../common/enums/month.enum';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { FindOneAttendanceDto } from './dto/find-one-attendance.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('attendance')
@@ -63,8 +63,9 @@ export class AttendanceController {
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @Get()
-  async findOne(@Body('userid') userid: string, @Body('month') month: Month) {
-    const attendance = await this.attendanceService.findOne(userid, month);
+  async findOne(@Body() findOneAttendanceDto: FindOneAttendanceDto) {
+    const { userid, month } = findOneAttendanceDto;
+    const attendance = await this.attendanceService.findOne(userid.toString(), month);
     if (!attendance) {
       throw new HttpException('Asistencia no encontrada', HttpStatus.NOT_FOUND);
     }

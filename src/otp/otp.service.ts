@@ -15,12 +15,17 @@ export class OtpService {
     @InjectModel(Otp.name) private otpModel: Model<OtpDocument>,
   ) {}
 
+  /*
+   * genera un OTP y lo envia al correo
+   */
   async generateOTP(email: string): Promise<Omit<Otp, 'token'>> {
+    // Generar un token de 6 dígitos
     const token = Math.floor(100000 + Math.random() * 900000).toString();
     // Encriptar el token
     const hashedToken = await bcrypt.hash(token, 10);
+    // Generar una fecha de expiración (10 minutos)
     const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + 15);
+    expiresAt.setMinutes(expiresAt.getMinutes() + 10);
     try {
       this.logger.log(`Intentando crear OTP para email: ${email}`);
 
@@ -55,6 +60,9 @@ export class OtpService {
     }
   }
 
+  /*
+   * valida un OTP retonando un  booleano
+   */
   async validateOTP(email: string, token: string): Promise<boolean> {
     this.logger.log(`Validando OTP: ${token} para email: ${email}`);
     const otp = await this.otpModel.findOne({ email });
