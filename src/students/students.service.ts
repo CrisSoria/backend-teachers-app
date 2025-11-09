@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { CreateStudentDto, CreateManyStudentsDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -16,19 +16,21 @@ export class StudentsService {
     } catch (error) {
       if (error.name === 'ValidationError') {
         const messages = Object.values(error.errors).map((err: any) => err.message);
-        throw new BadRequestException({
-          statusCode: 400,
+        throw new HttpException({
           message: 'Error de validación',
           errors: messages
-        });
+        }, HttpStatus.BAD_REQUEST);
       }
-      throw error;
+      throw new HttpException({
+        message: 'Error al crear el estudiante',
+        error: error.message,
+      }, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
   async createMany(createStudentsDto: CreateManyStudentsDto) {
     if (!createStudentsDto.students || !Array.isArray(createStudentsDto.students)) {
-      throw new BadRequestException('Se esperaba un array de estudiantes');
+      throw new HttpException('Se esperaba un array de estudiantes', HttpStatus.BAD_REQUEST);
     }
     
     try {
@@ -36,13 +38,15 @@ export class StudentsService {
     } catch (error) {
       if (error.name === 'ValidationError') {
         const messages = Object.values(error.errors).map((err: any) => err.message);
-        throw new BadRequestException({
-          statusCode: 400,
+        throw new HttpException({
           message: 'Error de validación',
           errors: messages
-        });
+        }, HttpStatus.BAD_REQUEST);
       }
-      throw error;
+      throw new HttpException({
+        message: 'Error al crear los estudiantes',
+        error: error.message,
+      }, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -62,13 +66,15 @@ export class StudentsService {
     } catch (error) {
       if (error.name === 'ValidationError') {
         const messages = Object.values(error.errors).map((err: any) => err.message);
-        throw new BadRequestException({
-          statusCode: 400,
+        throw new HttpException({
           message: 'Error de validación',
           errors: messages
-        });
+        }, HttpStatus.BAD_REQUEST);
       }
-      throw error;
+      throw new HttpException({
+        message: 'Error al actualizar el estudiante',
+        error: error.message,
+      }, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 

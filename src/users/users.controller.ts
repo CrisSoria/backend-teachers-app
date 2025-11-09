@@ -29,7 +29,7 @@ export class UsersController {
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+    return {message: 'Usuario creado exitosamente', user: this.usersService.create(createUserDto)};
   }
   @ApiTags('Users')
   @ApiOperation({ summary: 'Get all users' })
@@ -54,7 +54,7 @@ export class UsersController {
     if (!user) {
       throw new HttpException('Usuario no encontrado', HttpStatus.NOT_FOUND);
     }
-    return user;
+    return {message: 'Usuario obtenido exitosamente', user};
   }
 
   @ApiTags('Users')
@@ -69,7 +69,7 @@ export class UsersController {
     if (!updateUser) {
       throw new HttpException('Usuario no encontrado', HttpStatus.NOT_FOUND);
     }
-    return updateUser;
+    return {message: 'Usuario actualizado exitosamente', updateUser};
   }
 
   @ApiTags('Users')
@@ -85,6 +85,6 @@ export class UsersController {
       throw new HttpException('Usuario no encontrado', HttpStatus.NOT_FOUND);
     }
 
-    return deletedUser;
+    return {message: 'Usuario eliminado exitosamente', deletedUser};
   }
 }

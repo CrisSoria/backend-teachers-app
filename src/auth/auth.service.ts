@@ -318,8 +318,6 @@ export class AuthService {
       this.logger.log(`Se generan nuevos tokens`);
       const { access_token, refresh_token } = await this.login(user);
       return {
-        message: 'Contraseña cambiada exitosamente',
-        success: true,
         user,
         access_token,
         refresh_token,

@@ -59,12 +59,12 @@ export class AuthController {
   async register(@Body() registerUserDto: RegisterUserDto) {
     const { newUser, otp } = await this.authService.register(registerUserDto);
     return {
-        message:
-          'Usuario registrado exitosamente. Se ha enviado el código para verificar la cuenta al email: ' +
-          newUser.email,
-        newUser,
-        otp,
-      };
+      message:
+        'Usuario registrado exitosamente. Se ha enviado el código para verificar la cuenta al email: ' +
+        newUser.email,
+      newUser,
+      otp,
+    };
   }
 
   /*
@@ -109,7 +109,15 @@ export class AuthController {
   })
   @ApiResponse({ status: 401, description: 'Credenciales inválidas' })
   async login(@Request() req) {
-    return this.authService.login(req.user);
+    const { access_token, refresh_token, expires_in, user } =
+      await this.authService.login(req.user);
+    return {
+      message: 'Login exitoso',
+      access_token,
+      refresh_token,
+      expires_in,
+      user,
+    };
   }
 
   /*
@@ -145,7 +153,13 @@ export class AuthController {
     description: 'Refresh token inválido o expirado',
   })
   async refresh(@Body('refresh_token') refreshToken: string) {
-    return this.authService.refreshAccessToken(refreshToken);
+    const { access_token, expires_in } =
+      await this.authService.refreshAccessToken(refreshToken);
+    return {
+      message: 'Token renovado exitosamente',
+      access_token,
+      expires_in,
+    };
   }
 
   /*
@@ -184,7 +198,7 @@ export class AuthController {
         success: false,
       };
     }
-
+    // logout ya retorna un objeto con message y success
     return this.authService.logout(req.user.userId, token);
   }
 
@@ -201,9 +215,16 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description: 'Todas las sesiones cerradas exitosamente',
+    schema: {
+      example: {
+        message: 'Todas las sesiones cerradas exitosamente',
+        success: true,
+      },
+    },
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
   async logoutAll(@Request() req) {
+    // logoutAll retorna un objeto con message y success
     return this.authService.logoutAllSessions(req.user.userId);
   }
 
@@ -224,7 +245,7 @@ export class AuthController {
   /*
    * Cambio de contraseña
    * POST /auth/change-password
-   * @params 
+   * @params
    *    token OTP generado previamente
    *    newPassword
    *    email del usuario que solicita el cambio
@@ -237,6 +258,17 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'No autorizado' })
   async changePassword(@Body() changePasswordDto: ChangePasswordDto) {
     const { token, newPassword, email } = changePasswordDto;
-    return this.authService.changePassword(token, newPassword, email);
+    const response = await this.authService.changePassword(
+      token,
+      newPassword,
+      email,
+    );
+    const { user, access_token, refresh_token } = response;
+    return {
+      message: 'Contraseña cambiada exitosamente',
+      user,
+      access_token,
+      refresh_token,
+    };
   }
 }

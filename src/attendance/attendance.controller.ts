@@ -31,14 +31,8 @@ export class AttendanceController {
   @Post()
   async create(@Body() createAttendanceDto: CreateAttendanceDto) {
     const attendance = await this.attendanceService.create(createAttendanceDto);
-    console.log(attendance);
-    if (attendance) {
-      throw new HttpException(
-        'Ya existe una asistencia para este usuario y mes',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    return attendance;
+    
+    return {message: 'Asistencia creada exitosamente', attendance};
   }
 
   @ApiTags('Attendance')
@@ -53,7 +47,7 @@ export class AttendanceController {
     if (!attendance) {
       throw new HttpException('Este usuario no tiene asistencias registradas', HttpStatus.NOT_FOUND);
     }
-    return attendance;
+    return {message: 'Asistencias encontradas', attendance};
   }
 
   @ApiTags('Attendance')
@@ -69,7 +63,7 @@ export class AttendanceController {
     if (!attendance) {
       throw new HttpException('Asistencia no encontrada', HttpStatus.NOT_FOUND);
     }
-    return attendance;
+    return {message: 'Asistencia encontrada', attendance};
   }
 
   @ApiTags('Attendance')
@@ -84,7 +78,7 @@ export class AttendanceController {
     if (!attendance) {
       throw new HttpException('Asistencia no encontrada', HttpStatus.NOT_FOUND);
     }
-    return attendance;
+    return {message: 'Asistencia encontrada', attendance};
   }
 
   @ApiTags('Attendance')
@@ -105,7 +99,7 @@ export class AttendanceController {
     if (!attendance) {
       throw new HttpException('Asistencia no encontrada', HttpStatus.NOT_FOUND);
     }
-    return attendance;
+    return {message: 'Asistencia actualizada', attendance};
   }
 
   @ApiTags('Attendance')
@@ -120,6 +114,6 @@ export class AttendanceController {
     if (!attendance) {
       throw new HttpException('Asistencia no encontrada', HttpStatus.NOT_FOUND);
     }
-    return attendance;
+    return {message: 'Asistencia eliminada', attendance};
   }
 }

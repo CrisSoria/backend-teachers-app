@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { StudentsService } from './students.service';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
@@ -22,13 +32,20 @@ export class StudentsController {
     // Si es un array de estudiantes
     if (Array.isArray(body)) {
       if (body.length === 0) {
-        throw new HttpException('El array de estudiantes no puede estar vacío', HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          'El array de estudiantes no puede estar vacío',
+          HttpStatus.BAD_REQUEST,
+        );
       }
-      return this.studentsService.createMany({ students: body });
+      const students = await this.studentsService.createMany({
+        students: body,
+      });
+      return { message: 'Estudiantes creados exitosamente', students };
     }
-    
+
     // Si es un solo estudiante
-    return this.studentsService.create(body);
+    const student = await this.studentsService.create(body);
+    return { message: 'Estudiante creado exitosamente', student };
   }
 
   @ApiTags('Students')
@@ -41,9 +58,12 @@ export class StudentsController {
   async findAllByUser(@Param('id') id: string) {
     const students = await this.studentsService.findAllByUser(id);
     if (!students) {
-      throw new HttpException('Este usuario no tiene estudiantes registrados', HttpStatus.NOT_FOUND);
+      throw new HttpException(
+        'Este usuario no tiene estudiantes registrados',
+        HttpStatus.NOT_FOUND,
+      );
     }
-    return students;
+    return { message: 'Estudiantes obtenidos exitosamente', students };
   }
 
   @ApiTags('Students')
@@ -58,7 +78,7 @@ export class StudentsController {
     if (!student) {
       throw new HttpException('Estudiante no encontrado', HttpStatus.NOT_FOUND);
     }
-    return student;
+    return { message: 'Estudiante obtenido exitosamente', student };
   }
 
   @ApiTags('Students')
@@ -68,12 +88,15 @@ export class StudentsController {
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateStudentDto: UpdateStudentDto) {
+  async update(
+    @Param('id') id: string,
+    @Body() updateStudentDto: UpdateStudentDto,
+  ) {
     const student = await this.studentsService.update(id, updateStudentDto);
     if (!student) {
       throw new HttpException('Estudiante no encontrado', HttpStatus.NOT_FOUND);
     }
-    return student;
+    return { message: 'Estudiante actualizado exitosamente', student };
   }
 
   @ApiTags('Students')
@@ -88,6 +111,6 @@ export class StudentsController {
     if (!student) {
       throw new HttpException('Estudiante no encontrado', HttpStatus.NOT_FOUND);
     }
-    return student;
+    return { message: 'Estudiante eliminado exitosamente', student };
   }
 }

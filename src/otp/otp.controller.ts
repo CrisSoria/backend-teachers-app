@@ -18,7 +18,8 @@ export class OtpController {
   @ApiResponse({ status: 200, description: 'OTP generado exitosamente' })
   @ApiResponse({ status: 400, description: 'Email inválido' })
   generate(@Body() generateOtpDto: GenerateOtpDto) {
-    return this.otpService.generateOTP(generateOtpDto.email);
+    const otp = this.otpService.generateOTP(generateOtpDto.email);
+    return {message: 'OTP generado exitosamente', otp};
   }
 
   /**
@@ -31,7 +32,8 @@ export class OtpController {
   @ApiResponse({ status: 200, description: 'OTP validado exitosamente' })
   @ApiResponse({ status: 400, description: 'OTP inválido' })
   validate(@Body() validateOtpDto: ValidateOtpDto) {
-    return this.otpService.validateOTP(validateOtpDto.email, validateOtpDto.token);
+    const isValid = this.otpService.validateOTP(validateOtpDto.email, validateOtpDto.token);
+    return {message: 'OTP validado exitosamente', isValid};
   }
 
 }
