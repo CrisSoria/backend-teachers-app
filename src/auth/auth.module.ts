@@ -10,6 +10,8 @@ import { JwtStrategy } from './strategy/jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Token, TokenSchema } from './schemas/token.schema';
 import { OtpModule } from 'src/otp/otp.module';
+import { User, UserSchema } from 'src/users/schemas/user.schema';
+import { RolesGuard } from './guards/roles.guard';
 
 @Module({
   imports: [
@@ -18,20 +20,21 @@ import { OtpModule } from 'src/otp/otp.module';
     PassportModule,
     // Registrar el schema de Token
     MongooseModule.forFeature([
-      { name: Token.name, schema: TokenSchema }
+      { name: Token.name, schema: TokenSchema },
+      { name: User.name, schema: UserSchema },
     ]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
         const secret = configService.get<string>('JWT_SECRET');
-        
+
         if (!secret) {
           throw new Error('JWT_SECRET is not defined in environment variables');
         }
-        
+
         return {
           secret: secret,
-          signOptions: { 
+          signOptions: {
             // Tiempo por defecto (será sobrescrito en cada signAsync)
             expiresIn: '15m',
           },
@@ -41,7 +44,7 @@ import { OtpModule } from 'src/otp/otp.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy],
-  exports: [AuthService],
+  providers: [AuthService, LocalStrategy, JwtStrategy, RolesGuard],
+  exports: [AuthService, RolesGuard],
 })
 export class AuthModule {}

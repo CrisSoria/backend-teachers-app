@@ -1,12 +1,12 @@
 /**
  * Estados posibles para el registro de asistencia
- * P: Presente, 
- * C: Falta completa, 
- * M: Media falta, 
- * X: Tercio de falta, 
- * Q: Cuarta falta, 
- * T: Tres cuartas falta, 
- * D: Doble falta, 
+ * P: Presente,
+ * C: Falta completa,
+ * M: Media falta,
+ * X: Tercio de falta,
+ * Q: Cuarta falta,
+ * T: Tres cuartas falta,
+ * D: Doble falta,
  * -: Día sin actividad
  */
 export enum AttendanceStatus {

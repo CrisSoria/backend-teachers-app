@@ -8,7 +8,7 @@ import { ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
 export class OtpController {
   constructor(private readonly otpService: OtpService) {}
 
-  /**
+  /*
    * Genera un OTP para el email
    * POST /otp/generate
    */
@@ -19,10 +19,10 @@ export class OtpController {
   @ApiResponse({ status: 400, description: 'Email inválido' })
   generate(@Body() generateOtpDto: GenerateOtpDto) {
     const otp = this.otpService.generateOTP(generateOtpDto.email);
-    return {message: 'OTP generado exitosamente', otp};
+    return { message: 'OTP generado exitosamente', otp };
   }
 
-  /**
+  /*
    * Valida un OTP para el email
    * POST /otp/validate
    */
@@ -32,8 +32,10 @@ export class OtpController {
   @ApiResponse({ status: 200, description: 'OTP validado exitosamente' })
   @ApiResponse({ status: 400, description: 'OTP inválido' })
   validate(@Body() validateOtpDto: ValidateOtpDto) {
-    const isValid = this.otpService.validateOTP(validateOtpDto.email, validateOtpDto.token);
-    return {message: 'OTP validado exitosamente', isValid};
+    const isValid = this.otpService.validateOTP(
+      validateOtpDto.email,
+      validateOtpDto.token,
+    );
+    return { message: 'OTP validado exitosamente', isValid };
   }
-
 }

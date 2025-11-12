@@ -6,10 +6,10 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   // Aplicar el filtro global PRIMERO
   app.useGlobalFilters(new HttpExceptionFilter());
-  
+
   // Configurar ValidationPipe
   app.useGlobalPipes(
     new ValidationPipe({
@@ -24,7 +24,7 @@ async function bootstrap() {
           field: error.property,
           errors: Object.values(error.constraints || {}),
         }));
-        
+
         return new BadRequestException({
           statusCode: 400,
           message: 'Error de validación',
@@ -42,7 +42,7 @@ async function bootstrap() {
     .addTag('users')
     .addTag('teachers')
     .build();
-    
+
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
 
@@ -51,7 +51,7 @@ async function bootstrap() {
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
-  
+
   console.log(`🚀 Aplicación corriendo en: http://localhost:${port}`);
   console.log(`📚 Documentación Swagger: http://localhost:${port}/api`);
 }

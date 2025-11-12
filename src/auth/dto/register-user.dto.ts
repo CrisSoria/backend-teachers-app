@@ -1,21 +1,20 @@
-import { 
-  IsNotEmpty, 
-  IsString, 
-  IsEmail, 
+import {
+  IsNotEmpty,
+  IsString,
+  IsEmail,
   IsStrongPassword,
   IsEnum,
   MinLength,
-  MaxLength
-} from "class-validator";
-import { ApiProperty } from "@nestjs/swagger";
-
+  MaxLength,
+} from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class RegisterUserDto {
   @ApiProperty({
     description: 'Nombre completo del usuario',
     example: 'Juan Pérez',
     minLength: 2,
-    maxLength: 100
+    maxLength: 100,
   })
   @IsNotEmpty({ message: 'El nombre es obligatorio' })
   @IsString({ message: 'El nombre debe ser una cadena de texto' })
@@ -25,7 +24,7 @@ export class RegisterUserDto {
 
   @ApiProperty({
     description: 'Correo electrónico del usuario',
-    example: 'usuario@ejemplo.com'
+    example: 'usuario@ejemplo.com',
   })
   @IsNotEmpty({ message: 'El email es obligatorio' })
   @IsEmail({}, { message: 'El correo electrónico no es válido' })
@@ -33,9 +32,10 @@ export class RegisterUserDto {
   email: string;
 
   @ApiProperty({
-    description: 'Contraseña del usuario (mínimo 8 caracteres, debe incluir mayúsculas, minúsculas, números y símbolos)',
+    description:
+      'Contraseña del usuario (mínimo 8 caracteres, debe incluir mayúsculas, minúsculas, números y símbolos)',
     example: 'MiPassword123!',
-    minLength: 8
+    minLength: 8,
   })
   @IsNotEmpty({ message: 'El password es obligatorio' })
   @IsString({ message: 'El password debe ser una cadena de texto' })
@@ -50,7 +50,7 @@ export class RegisterUserDto {
     {
       message:
         'El password debe tener al menos 8 caracteres e incluir: mayúsculas, minúsculas, números y caracteres especiales',
-    }
+    },
   )
   password: string;
 }

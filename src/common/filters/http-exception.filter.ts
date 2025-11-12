@@ -29,7 +29,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
-      
+
       if (typeof exceptionResponse === 'object') {
         // Extraer toda la información de la excepción
         errorResponse = {
@@ -54,14 +54,17 @@ export class HttpExceptionFilter implements ExceptionFilter {
         `Error no controlado: ${exception.message}`,
         exception.stack,
       );
-      
+
       errorResponse = {
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         timestamp: new Date().toISOString(),
         path: request.url,
         method: request.method,
         message: 'Error interno del servidor',
-        error: process.env.NODE_ENV === 'development' ? exception.message : undefined,
+        error:
+          process.env.NODE_ENV === 'development'
+            ? exception.message
+            : undefined,
       };
     }
 
@@ -69,7 +72,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
     if (status >= 500) {
       this.logger.error(
         `${request.method} ${request.url} - Status: ${status}`,
-        exception instanceof Error ? exception.stack : JSON.stringify(exception),
+        exception instanceof Error
+          ? exception.stack
+          : JSON.stringify(exception),
       );
     } else {
       this.logger.warn(

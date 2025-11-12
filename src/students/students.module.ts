@@ -1,4 +1,9 @@
-import { Module, NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
+import {
+  Module,
+  NestModule,
+  MiddlewareConsumer,
+  RequestMethod,
+} from '@nestjs/common';
 import { StudentsService } from './students.service';
 import { StudentsController } from './students.controller';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -6,9 +11,12 @@ import { Student, StudentSchema } from './schemas/students.schema';
 import { ValidMongoIdMiddleware } from 'src/common/middleware/valid-mongoid.middleware';
 
 @Module({
+  imports: [
+    MongooseModule.forFeature([{ name: Student.name, schema: StudentSchema }]),
+  ],
   controllers: [StudentsController],
   providers: [StudentsService],
-  imports: [MongooseModule.forFeature([{ name: Student.name, schema: StudentSchema }])],
+  exports: [StudentsService],
 })
 export class StudentsModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

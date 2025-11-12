@@ -2,7 +2,6 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsMongoId,
   Min,
   IsNumber,
   IsEnum,
@@ -11,14 +10,8 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { StudentsGender } from '../interfaces/students-gender.enum';
-import * as mongoose from 'mongoose';
 
 export class CreateStudentDto {
-  // Para un solo estudiante
-  @IsNotEmpty({ message: 'El userid es obligatorio' })
-  @IsMongoId({ message: 'El userid debe ser un MongoID válido' })
-  userId: mongoose.Types.ObjectId;
-
   @IsNotEmpty({ message: 'El name es obligatorio' })
   @IsString({ message: 'El name debe ser una cadena de texto' })
   name: string;

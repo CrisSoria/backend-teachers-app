@@ -19,7 +19,9 @@ import { OtpModule } from './otp/otp.module';
       useFactory: async (configService: ConfigService) => {
         const uri = configService.get<string>('MONGODB_URI');
         if (!uri) {
-          throw new Error('MONGODB_URI is not defined in environment variables');
+          throw new Error(
+            'MONGODB_URI is not defined in environment variables',
+          );
         }
         return {
           uri,

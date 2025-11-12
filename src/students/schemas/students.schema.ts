@@ -5,7 +5,7 @@ import { Document, Types } from 'mongoose';
 
 export type StudentDocument = Student & Document<Types.ObjectId>;
 
-@Schema()
+@Schema({ timestamps: true }) // Agrega createdAt y updatedAt automáticamente
 export class Student {
   @Prop({ required: true, type: mongoose.Schema.Types.ObjectId })
   userId: mongoose.Types.ObjectId;

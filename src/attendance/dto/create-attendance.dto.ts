@@ -21,9 +21,9 @@ export class DailyAttendanceDto {
 
 // DTO principal para crear asistencia
 export class CreateAttendanceDto {
-  @IsMongoId({ message: 'El userid debe ser un MongoID válido' })
-  @IsNotEmpty({ message: 'El userid es obligatorio' })
-  userid: mongoose.Types.ObjectId;
+  @IsMongoId({ message: 'El userId debe ser un MongoID válido' })
+  @IsNotEmpty({ message: 'El userId es obligatorio' })
+  userId: mongoose.Types.ObjectId;
 
   @IsEnum(Month, { message: 'El mes proporcionado no es válido' })
   @IsNotEmpty({ message: 'El mes es obligatorio' })

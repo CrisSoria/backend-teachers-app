@@ -72,7 +72,6 @@ export class AuthController {
    * POST /auth/login
    * Retorna access_token y refresh_token
    */
-  @UseGuards(LocalAuthGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Iniciar sesión' })
@@ -108,6 +107,7 @@ export class AuthController {
     },
   })
   @ApiResponse({ status: 401, description: 'Credenciales inválidas' })
+  @UseGuards(LocalAuthGuard)
   async login(@Request() req) {
     const { access_token, refresh_token, expires_in, user } =
       await this.authService.login(req.user);
@@ -167,7 +167,6 @@ export class AuthController {
    * POST /auth/logout
    * Invalida el access token actual y elimina el refresh token
    */
-  @UseGuards(JwtAuthGuard)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
@@ -188,6 +187,7 @@ export class AuthController {
     },
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
+  @UseGuards(JwtAuthGuard)
   async logout(@Request() req, @Headers('authorization') authHeader: string) {
     // Extraer el token del header "Bearer <token>"
     const token = authHeader?.replace('Bearer ', '');
@@ -207,7 +207,6 @@ export class AuthController {
    * POST /auth/logout-all
    * Útil para cambio de contraseña o seguridad
    */
-  @UseGuards(JwtAuthGuard)
   @Post('logout-all')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
@@ -223,6 +222,7 @@ export class AuthController {
     },
   })
   @ApiResponse({ status: 401, description: 'No autorizado' })
+  @UseGuards(JwtAuthGuard)
   async logoutAll(@Request() req) {
     // logoutAll retorna un objeto con message y success
     return this.authService.logoutAllSessions(req.user.userId);
@@ -232,12 +232,12 @@ export class AuthController {
    * Obtener perfil del usuario autenticado
    * GET /auth/profile
    */
-  @UseGuards(JwtAuthGuard)
   @Get('profile')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Obtener perfil del usuario autenticado' })
   @ApiResponse({ status: 200, description: 'Perfil obtenido exitosamente' })
   @ApiResponse({ status: 401, description: 'No autorizado' })
+  @UseGuards(JwtAuthGuard)
   async getProfile(@Request() req) {
     return req.user;
   }

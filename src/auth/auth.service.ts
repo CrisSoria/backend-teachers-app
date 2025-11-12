@@ -81,6 +81,8 @@ export class AuthService {
       email: user.email,
       sub: user._id,
       name: user.name,
+      role: user.role,
+      status: user.status,
     };
 
     this.logger.log(`Generando tokens para usuario: ${user.email}`);
@@ -106,6 +108,8 @@ export class AuthService {
         id: user._id,
         email: user.email,
         name: user.name,
+        role: user.role,
+        status: user.status,
       },
     };
   }
@@ -140,6 +144,8 @@ export class AuthService {
         email: payload.email,
         sub: payload.sub,
         name: payload.name,
+        role: payload.role,
+        status: payload.status,
       };
 
       const accessToken = await this.jwtService.signAsync(newPayload, {

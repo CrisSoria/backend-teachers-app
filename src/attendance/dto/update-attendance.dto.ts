@@ -9,6 +9,7 @@ import {
   IsMongoId,
   ValidateNested,
   IsObject,
+  IsNotEmpty,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { Month } from '../../common/enums/month.enum';
@@ -16,8 +17,9 @@ import { IsDailyAttendance } from '../validators/attendance.validator';
 import mongoose from 'mongoose';
 
 export class UpdateAttendanceDto extends PartialType(CreateAttendanceDto) {
-  @IsMongoId({ message: 'El userid debe ser un MongoID válido' })
-  userid: mongoose.Types.ObjectId;
+  @IsMongoId({ message: 'El userId debe ser un MongoID válido' })
+  @IsNotEmpty({ message: 'El userId es obligatorio' })
+  userId: mongoose.Types.ObjectId;
 
   @IsEnum(Month, { message: 'El mes proporcionado no es válido' })
   month: Month;

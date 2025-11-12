@@ -4,7 +4,7 @@
     UNVERIFIED: cuenta no verificada con OTP
 */
 export enum UserStatus {
-    ACTIVE = 'active',
-    INACTIVE = 'inactive',
-    UNVERIFIED = 'unverified'
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  UNVERIFIED = 'unverified',
 }

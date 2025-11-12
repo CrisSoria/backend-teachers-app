@@ -15,7 +15,7 @@ export class Attendance {
     ref: 'User', // modelo de referencia
     required: true,
   })
-  userid: mongoose.Schema.Types.ObjectId;
+  userId: mongoose.Schema.Types.ObjectId;
 
   /**
    * El mes de la asistencia.
@@ -54,4 +54,4 @@ export class Attendance {
 export const AttendanceSchema = SchemaFactory.createForClass(Attendance);
 
 // Agregar un índice compuesto para mejorar la eficiencia de las búsquedas por usuario y mes
-AttendanceSchema.index({ userid: 1, month: 1 }, { unique: true });
+AttendanceSchema.index({ userId: 1, month: 1 }, { unique: true });

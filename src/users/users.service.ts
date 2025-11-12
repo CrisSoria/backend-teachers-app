@@ -4,6 +4,7 @@ import {
   HttpException,
   HttpStatus,
   UnauthorizedException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -18,6 +19,7 @@ import {
   UserDeletionFailedException,
 } from './exceptions/user.exceptions';
 import * as bcrypt from 'bcrypt';
+import { UserStatus } from './interfaces/user-status-enum';
 
 @Injectable()
 export class UsersService {
@@ -341,6 +343,12 @@ export class UsersService {
       this.logger.warn(`Usuario no encontrado: ${email}`);
       throw new UserNotFoundException(email);
     }
+    if (user.status == UserStatus.INACTIVE) {
+      throw new ForbiddenException(
+        'No tienes permiso para acceder a tu cuenta',
+      );
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.password || '');
     if (!isPasswordValid) {
       this.logger.warn(`Contraseña incorrecta para: ${email}`);

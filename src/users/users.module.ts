@@ -1,4 +1,9 @@
-import { Module, NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
+import {
+  Module,
+  NestModule,
+  MiddlewareConsumer,
+  RequestMethod,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -19,11 +24,11 @@ export class UsersModule implements NestModule {
       .apply(ValidMongoIdMiddleware)
       .exclude(
         { path: 'users', method: RequestMethod.POST },
-        { path: 'users', method: RequestMethod.GET }
+        { path: 'users', method: RequestMethod.GET },
       )
       .forRoutes({
         path: 'users/:id',
-        method: RequestMethod.ALL
+        method: RequestMethod.ALL,
       });
   }
 }

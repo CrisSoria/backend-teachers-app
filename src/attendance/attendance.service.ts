@@ -15,11 +15,18 @@ export class AttendanceService {
 
   async create(createAttendanceDto: CreateAttendanceDto) {
     try {
-      const createdAttendance = new this.attendanceModel(createAttendanceDto);
-      const newAttendance = await createdAttendance.save();
-      return newAttendance;
+      // Convert plain objects to Maps
+      const attendanceWithMaps = {
+        ...createAttendanceDto,
+        data: createAttendanceDto.data.map(
+          (item) => new Map(Object.entries(item)),
+        ),
+      };
+      const newAttendance = new this.attendanceModel(attendanceWithMaps);
+      const createdAttendance = await newAttendance.save();
+      return createdAttendance;
     } catch (error) {
-      // Error de duplicado (userid y month únicos)
+      // Error de duplicado (userId y month únicos)
       if (error.code === 11000) {
         throw new HttpException(
           {
@@ -30,7 +37,7 @@ export class AttendanceService {
         );
       }
       console.error(
-        `Error creando asistencia para el usuario ${createAttendanceDto.userid}:`,
+        `Error creando asistencia para el usuario ${createAttendanceDto.userId}:`,
         error,
       );
       throw new HttpException(
@@ -44,16 +51,16 @@ export class AttendanceService {
     return this.attendanceModel.find().exec();
   }
 
-  async findAllByUser(userid: string) {
+  async findAllByUser(userId: string) {
     try {
       return await this.attendanceModel
-        .find({ userid })
+        .find({ userId })
         .sort({ month: 1 }) // Sorts by month in ascending order
         .exec();
     } catch (error) {
       // Log the error for debugging
       console.error(
-        `Error encontrando registros de asistencia para el usuario ${userid}:`,
+        `Error encontrando registros de asistencia para el usuario ${userId}:`,
         error,
       );
       throw new HttpException(
@@ -82,7 +89,7 @@ export class AttendanceService {
   }
   async findOne(id: string, month: Month) {
     try {
-      return await this.attendanceModel.findOne({ userid: id, month }).exec();
+      return await this.attendanceModel.findOne({ userId: id, month }).exec();
     } catch (error) {
       // Log the error for debugging
       console.error(
