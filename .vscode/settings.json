@@ -1,4 +1,5 @@
 {
+  "workbench.iconTheme": "symbols",
   "symbols.files.associations": {
     "*.controller.ts": "nest-controller",
     "*.module.ts": "nest-module",
@@ -11,6 +12,7 @@
     "*.resolver.ts": "nest-resolver",
     "*.service.ts": "nest-service",
     "*.gateway.ts": "nest-gateway",
-    "*.subscriber.ts": "nest-subscriber"
+    "*.subscriber.ts": "nest-subscriber",
+    "*.decorator.ts": "nest-decorator"
   }
 }

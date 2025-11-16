@@ -5,23 +5,23 @@ import {
   Post,
   Request,
   UseGuards,
-  HttpCode,
-  HttpStatus,
   Headers,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RegisterUserDto } from './dto/register-user.dto';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiBody,
-  ApiHeader,
-} from '@nestjs/swagger';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiRegister,
+  ApiLogin,
+  ApiRefreshToken,
+  ApiLogout,
+  ApiLogoutAll,
+  ApiChangePassword,
+  ApiProfile,
+} from './decorators/swagger.decorator';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -33,29 +33,7 @@ export class AuthController {
    * POST /auth/register
    */
   @Post('register')
-  @ApiOperation({ summary: 'Registrar nuevo usuario' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        email: {
-          type: 'string',
-          example: 'user@example.com',
-        },
-        password: {
-          type: 'string',
-          example: 'Password123!',
-        },
-        name: {
-          type: 'string',
-          example: 'John Doe',
-        },
-      },
-    },
-  })
-  @ApiResponse({ status: 201, description: 'Usuario registrado exitosamente' })
-  @ApiResponse({ status: 400, description: 'Datos inválidos' })
-  @ApiResponse({ status: 401, description: 'Email ya registrado' })
+  @ApiRegister()
   async register(@Body() registerUserDto: RegisterUserDto) {
     const { newUser, otp } = await this.authService.register(registerUserDto);
     return {
@@ -73,41 +51,8 @@ export class AuthController {
    * Retorna access_token y refresh_token
    */
   @Post('login')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Iniciar sesión' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        email: { type: 'string', example: 'user@example.com' },
-        password: { type: 'string', example: 'password123' },
-        otp: {
-          type: 'string',
-          description: 'Required only for UNVERIFIED users',
-          example: '123456',
-          required: ['false'],
-        },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Login exitoso',
-    schema: {
-      example: {
-        access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-        refresh_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-        expires_in: 900,
-        user: {
-          id: '507f1f77bcf86cd799439011',
-          email: 'user@example.com',
-          name: 'John Doe',
-        },
-      },
-    },
-  })
-  @ApiResponse({ status: 401, description: 'Credenciales inválidas' })
   @UseGuards(LocalAuthGuard)
+  @ApiLogin()
   async login(@Request() req) {
     const { access_token, refresh_token, expires_in, user } =
       await this.authService.login(req.user);
@@ -125,33 +70,7 @@ export class AuthController {
    * POST /auth/refresh
    */
   @Post('refresh')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Renovar access token' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        refresh_token: {
-          type: 'string',
-          example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-        },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Token renovado exitosamente',
-    schema: {
-      example: {
-        access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-        expires_in: 900,
-      },
-    },
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Refresh token inválido o expirado',
-  })
+  @ApiRefreshToken()
   async refresh(@Body('refresh_token') refreshToken: string) {
     const { access_token, expires_in } =
       await this.authService.refreshAccessToken(refreshToken);
@@ -168,25 +87,7 @@ export class AuthController {
    * Invalida el access token actual y elimina el refresh token
    */
   @Post('logout')
-  @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Cerrar sesión' })
-  @ApiHeader({
-    name: 'Authorization',
-    description: 'Bearer <token>',
-    required: true,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Sesión cerrada exitosamente',
-    schema: {
-      example: {
-        message: 'Sesión cerrada exitosamente',
-        success: true,
-      },
-    },
-  })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiLogout()
   @UseGuards(JwtAuthGuard)
   async logout(@Request() req, @Headers('authorization') authHeader: string) {
     // Extraer el token del header "Bearer <token>"
@@ -208,21 +109,8 @@ export class AuthController {
    * Útil para cambio de contraseña o seguridad
    */
   @Post('logout-all')
-  @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Cerrar todas las sesiones del usuario' })
-  @ApiResponse({
-    status: 200,
-    description: 'Todas las sesiones cerradas exitosamente',
-    schema: {
-      example: {
-        message: 'Todas las sesiones cerradas exitosamente',
-        success: true,
-      },
-    },
-  })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
   @UseGuards(JwtAuthGuard)
+  @ApiLogoutAll()
   async logoutAll(@Request() req) {
     // logoutAll retorna un objeto con message y success
     return this.authService.logoutAllSessions(req.user.userId);
@@ -234,9 +122,7 @@ export class AuthController {
    */
   @Get('profile')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Obtener perfil del usuario autenticado' })
-  @ApiResponse({ status: 200, description: 'Perfil obtenido exitosamente' })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiProfile()
   @UseGuards(JwtAuthGuard)
   async getProfile(@Request() req) {
     return req.user;
@@ -253,9 +139,7 @@ export class AuthController {
    */
   @Post('change-password')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Cambio de contraseña' })
-  @ApiResponse({ status: 200, description: 'Cambio de contraseña exitoso' })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiChangePassword()
   async changePassword(@Body() changePasswordDto: ChangePasswordDto) {
     const { token, newPassword, email } = changePasswordDto;
     const response = await this.authService.changePassword(

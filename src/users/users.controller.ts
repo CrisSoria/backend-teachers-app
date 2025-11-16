@@ -13,7 +13,7 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
@@ -23,20 +23,23 @@ import {
   isAdmin,
 } from 'src/auth/herlpers/authorization.helper';
 import { UserRole } from './interfaces/user-role.enum';
+import {
+  ApiCreateUser,
+  ApiDeleteUser,
+  ApiFindAllUsers,
+  ApiFindOneUser,
+  ApiUpdateUser,
+} from './decorators/swagger.decorator';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ApiBearerAuth()
+@ApiTags('Users')
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  @ApiTags('Users')
-  @ApiOperation({ summary: 'Create user' })
-  @ApiResponse({ status: 201, description: 'User created' })
-  @ApiResponse({ status: 400, description: 'Bad request' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
+  @ApiCreateUser()
   @Roles(UserRole.ADMIN)
   create(@Body() createUserDto: CreateUserDto) {
     return {
@@ -45,12 +48,7 @@ export class UsersController {
     };
   }
 
-  @ApiTags('Users')
-  @ApiOperation({ summary: 'Get all users' })
-  @ApiResponse({ status: 200, description: 'Get all users' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
+  @ApiFindAllUsers()
   @Roles(UserRole.ADMIN)
   @Get()
   findAll() {
@@ -58,12 +56,7 @@ export class UsersController {
   }
 
   @Get(':id')
-  @ApiTags('Users')
-  @ApiOperation({ summary: 'Get user by id' })
-  @ApiResponse({ status: 200, description: 'Get user by id' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
+  @ApiFindOneUser()
   async findOne(@Param('id') id: string, @Request() req) {
     // Compara en memoria (no hace query a BD) que el usuario del JWT esta buscando su propio usuario
     checkResourceOwnership(req.user, { userId: id.toString() });
@@ -75,12 +68,7 @@ export class UsersController {
   }
 
   @Patch(':id')
-  @ApiTags('Users')
-  @ApiOperation({ summary: 'Update user by id' })
-  @ApiResponse({ status: 200, description: 'Update user by id' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
+  @ApiUpdateUser()
   async update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
@@ -103,12 +91,7 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @ApiTags('Users')
-  @ApiOperation({ summary: 'Delete user by id' })
-  @ApiResponse({ status: 200, description: 'Delete user by id' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
+  @ApiDeleteUser()
   async remove(@Param('id') id: string, @Request() req) {
     // Valida que solo el admin pueda eliminar usuarios
     if (!isAdmin(req.user)) {

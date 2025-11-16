@@ -2,8 +2,10 @@ import { Controller, Post, Body } from '@nestjs/common';
 import { OtpService } from './otp.service';
 import { GenerateOtpDto } from './dto/generate-otp.dto';
 import { ValidateOtpDto } from './dto/validate-otp.dto';
-import { ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
+import { ApiGenerateOtp, ApiValidateOtp } from './decorators/swagger.decorator';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('OTP')
 @Controller('otp')
 export class OtpController {
   constructor(private readonly otpService: OtpService) {}
@@ -13,10 +15,7 @@ export class OtpController {
    * POST /otp/generate
    */
   @Post('generate')
-  @ApiOperation({ summary: 'Generar OTP' })
-  @ApiBody({ type: GenerateOtpDto })
-  @ApiResponse({ status: 200, description: 'OTP generado exitosamente' })
-  @ApiResponse({ status: 400, description: 'Email inválido' })
+  @ApiGenerateOtp()
   generate(@Body() generateOtpDto: GenerateOtpDto) {
     const otp = this.otpService.generateOTP(generateOtpDto.email);
     return { message: 'OTP generado exitosamente', otp };
@@ -27,10 +26,7 @@ export class OtpController {
    * POST /otp/validate
    */
   @Post('validate')
-  @ApiOperation({ summary: 'Validar OTP' })
-  @ApiBody({ type: ValidateOtpDto })
-  @ApiResponse({ status: 200, description: 'OTP validado exitosamente' })
-  @ApiResponse({ status: 400, description: 'OTP inválido' })
+  @ApiValidateOtp()
   validate(@Body() validateOtpDto: ValidateOtpDto) {
     const isValid = this.otpService.validateOTP(
       validateOtpDto.email,

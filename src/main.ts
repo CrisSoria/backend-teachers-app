@@ -39,8 +39,7 @@ async function bootstrap() {
     .setTitle('Teachers API')
     .setDescription('API para la gestión de profesores y usuarios')
     .setVersion('1.0.0')
-    .addTag('users')
-    .addTag('teachers')
+    .addBearerAuth()
     .build();
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);
