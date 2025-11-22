@@ -3,7 +3,6 @@ import {
   IsString,
   IsEmail,
   IsStrongPassword,
-  IsEnum,
   MinLength,
   MaxLength,
 } from 'class-validator';
@@ -13,13 +12,13 @@ export class RegisterUserDto {
   @ApiProperty({
     description: 'Nombre completo del usuario',
     example: 'Juan Pérez',
-    minLength: 2,
-    maxLength: 100,
+    minLength: 3,
+    maxLength: 30,
   })
   @IsNotEmpty({ message: 'El nombre es obligatorio' })
   @IsString({ message: 'El nombre debe ser una cadena de texto' })
-  @MinLength(2, { message: 'El nombre debe tener al menos 2 caracteres' })
-  @MaxLength(100, { message: 'El nombre no puede exceder 100 caracteres' })
+  @MinLength(3, { message: 'El nombre debe tener al menos 3 caracteres' })
+  @MaxLength(30, { message: 'El nombre no puede exceder 30 caracteres' })
   name: string;
 
   @ApiProperty({
@@ -28,7 +27,7 @@ export class RegisterUserDto {
   })
   @IsNotEmpty({ message: 'El email es obligatorio' })
   @IsEmail({}, { message: 'El correo electrónico no es válido' })
-  @MaxLength(255, { message: 'El email no puede exceder 255 caracteres' })
+  @MaxLength(30, { message: 'El email no puede exceder 30 caracteres' })
   email: string;
 
   @ApiProperty({

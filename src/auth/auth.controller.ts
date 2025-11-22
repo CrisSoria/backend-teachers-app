@@ -6,6 +6,8 @@ import {
   Request,
   UseGuards,
   Headers,
+  Res,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
@@ -53,15 +55,31 @@ export class AuthController {
   @Post('login')
   @UseGuards(LocalAuthGuard)
   @ApiLogin()
-  async login(@Request() req) {
+  async login(@Request() req, @Res({ passthrough: true }) res) {
     const { access_token, refresh_token, expires_in, user } =
       await this.authService.login(req.user);
+
+    // Configura las cookies
+    res.cookie('access_token', access_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // Solo HTTPS en producción
+      sameSite: 'lax', // o 'strict' para mayor seguridad
+      maxAge: expires_in * 1000, // Tiempo de expiración en milisegundos
+      path: '/',
+    });
+
+    // Opcional: configurar el refresh token como cookie
+    res.cookie('refresh_token', refresh_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/auth/refresh', // Ruta específica para el refresh
+    });
+
     return {
       message: 'Login exitoso',
-      access_token,
-      refresh_token,
-      expires_in,
       user,
+      // No enviamos los tokens en la respuesta
     };
   }
 
@@ -71,12 +89,28 @@ export class AuthController {
    */
   @Post('refresh')
   @ApiRefreshToken()
-  async refresh(@Body('refresh_token') refreshToken: string) {
+  async refresh(@Request() req, @Res({ passthrough: true }) res) {
+    // Obtener refresh_token de las cookies en lugar del body
+    const refreshToken = req.cookies?.refresh_token;
+
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token no encontrado');
+    }
+
     const { access_token, expires_in } =
       await this.authService.refreshAccessToken(refreshToken);
+
+    // Configurar la nueva cookie de access_token
+    res.cookie('access_token', access_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: expires_in * 1000,
+      path: '/',
+    });
+
     return {
       message: 'Token renovado exitosamente',
-      access_token,
       expires_in,
     };
   }
@@ -89,18 +123,16 @@ export class AuthController {
   @Post('logout')
   @ApiLogout()
   @UseGuards(JwtAuthGuard)
-  async logout(@Request() req, @Headers('authorization') authHeader: string) {
-    // Extraer el token del header "Bearer <token>"
-    const token = authHeader?.replace('Bearer ', '');
+  async logout(@Request() req, @Res({ passthrough: true }) res) {
+    // 1. Limpiar cookies
+    res.clearCookie('access_token');
+    res.clearCookie('refresh_token');
 
-    if (!token) {
-      return {
-        message: 'Token no proporcionado',
-        success: false,
-      };
-    }
-    // logout ya retorna un objeto con message y success
-    return this.authService.logout(req.user.userId, token);
+    // 2. Llamar al servicio para manejar la lógica de logout
+    return this.authService.logout(
+      req.user.userId,
+      req.cookies['access_token'],
+    );
   }
 
   /*
@@ -138,21 +170,39 @@ export class AuthController {
    * Retorna el usuario y los tokens
    */
   @Post('change-password')
-  @ApiBearerAuth()
   @ApiChangePassword()
-  async changePassword(@Body() changePasswordDto: ChangePasswordDto) {
+  async changePassword(
+    @Body() changePasswordDto: ChangePasswordDto,
+    @Res({ passthrough: true }) res,
+  ) {
     const { token, newPassword, email } = changePasswordDto;
     const response = await this.authService.changePassword(
       token,
       newPassword,
       email,
     );
-    const { user, access_token, refresh_token } = response;
+    const { user, access_token, refresh_token, expires_in } = response;
+
+    // Configura las cookies
+    res.cookie('access_token', access_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // Solo HTTPS en producción
+      sameSite: 'lax', // o 'strict' para mayor seguridad
+      maxAge: expires_in * 1000, // Tiempo de expiración en milisegundos
+      path: '/',
+    });
+
+    // Opcional: configurar el refresh token como cookie
+    res.cookie('refresh_token', refresh_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/auth/refresh', // Ruta específica para el refresh
+    });
+
     return {
       message: 'Contraseña cambiada exitosamente',
       user,
-      access_token,
-      refresh_token,
     };
   }
 }

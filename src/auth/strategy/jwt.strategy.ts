@@ -28,7 +28,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (req) => {
+          console.log('JWT Strategy - Cookies:', req.cookies);
+          return req?.cookies?.access_token || null;
+        },
+      ]),
+
       ignoreExpiration: false,
       secretOrKey: secret,
       passReqToCallback: true, // para que el callback tenga acceso al request
@@ -36,7 +42,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(req: any, payload: IPayload): Promise<IAuthUser> {
-    const token = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
+    const token = ExtractJwt.fromExtractors([
+      (req) => req?.cookies?.access_token || null,
+    ])(req);
 
     if (!token) {
       throw new UnauthorizedException('Token no proporcionado');

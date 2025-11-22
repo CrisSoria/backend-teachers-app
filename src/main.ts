@@ -46,7 +46,12 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, documentFactory);
 
   // Habilitar CORS si es necesario
-  // app.enableCors();
+  app.enableCors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000', // La URL de tu frontend
+    credentials: true, // CRÍTICO: Permite el envío de cookies
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port);

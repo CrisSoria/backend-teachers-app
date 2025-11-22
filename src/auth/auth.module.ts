@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -12,6 +12,7 @@ import { Token, TokenSchema } from './schemas/token.schema';
 import { OtpModule } from 'src/otp/otp.module';
 import { User, UserSchema } from 'src/users/schemas/user.schema';
 import { RolesGuard } from './guards/roles.guard';
+import cookieParser from 'cookie-parser';
 
 @Module({
   imports: [
@@ -47,4 +48,11 @@ import { RolesGuard } from './guards/roles.guard';
   providers: [AuthService, LocalStrategy, JwtStrategy, RolesGuard],
   exports: [AuthService, RolesGuard],
 })
-export class AuthModule {}
+export class AuthModule {
+   configure(consumer: MiddlewareConsumer) {
+    // Habilita el manejo de cookies
+    consumer
+      .apply(cookieParser())
+      .forRoutes('*');
+  }
+}

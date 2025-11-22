@@ -107,3 +107,61 @@ función helper:     Request → JWT → Query BD → Compare en memoria → Res
 
 ```
 
+# Documentación: Autenticación con JWT y Cookies
+
+## Flujo de Autenticación
+
+### 1. Login
+- **Endpoint**: `POST /auth/login`
+- **Proceso**:
+  - Valida credenciales (email/contraseña)
+  - Genera dos tokens JWT:
+    - **Access Token**: Corta duración (ej. 15m)
+    - **Refresh Token**: Mayor duración (ej. 7d)
+  - Almacena el refresh token en la base de datos
+  - Establece ambos tokens como cookies HTTP-only y seguras
+  - Retorna información del usuario
+
+### 2. Cookies
+- **Access Token**:
+  - Nombre: `access_token`
+  - HTTP-only: Sí
+  - Segura: Sí (solo HTTPS)
+  - SameSite: 'strict'
+
+- **Refresh Token**:
+  - Nombre: `refresh_token`
+  - HTTP-only: Sí
+  - Segura: Sí (solo HTTPS)
+  - SameSite: 'strict'
+
+### 3. Logout
+- **Endpoint**: `POST /auth/logout`
+- **Proceso**:
+  1. Limpia las cookies del navegador
+  2. Elimina el refresh token de la base de datos
+  3. Añade el access token a la lista negra (blacklist)
+  4. Retorna confirmación de cierre de sesión
+
+### 4. Blacklist de Tokens
+- **Propósito**: Invalidar tokens antes de su expiración
+- **Implementación**:
+  - Colección en MongoDB que almacena tokens revocados
+  - Cada entrada contiene:
+    - Token
+    - ID de usuario
+    - Fecha de expiración
+    - Tipo: 'blacklist'
+
+### 5. Seguridad Adicional
+- Validación de tokens contra la blacklist
+- Renovación automática de tokens con refresh token
+- Protección CSRF con SameSite cookies
+- Headers de seguridad HTTP
+
+### 6. Endpoints Relacionados
+- `POST /auth/refresh`: Renovar tokens
+- `POST /auth/logout-all`: Cerrar sesión en todos los dispositivos
+- `GET /auth/profile`: Obtener perfil de usuario actual
+
+Esta implementación sigue las mejores prácticas de seguridad para autenticación basada en tokens, combinando la comodidad de las cookies HTTP-only con la seguridad de la validación en el servidor.

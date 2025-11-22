@@ -41,7 +41,7 @@ export class AuthService {
     try {
       this.logger.log(`Validando usuario con email: ${email} | OTP: ${otp}`);
 
-      const user = await this.usersService.validatePassword(email, password);
+      let user = await this.usersService.validatePassword(email, password);
       this.logger.log(`Password validado exitosamente. Estado: ${user.status}`);
 
       if (user.status === UserStatus.INACTIVE) {
@@ -58,7 +58,7 @@ export class AuthService {
           throw new UnauthorizedException('OTP inválido');
         }
         // El OTP es válido, actualizamos el estado del usuario
-        await this.usersService.update(user._id.toString(), {
+        user = await this.usersService.update(user._id.toString(), {
           status: UserStatus.ACTIVE,
         });
       }
@@ -322,11 +322,13 @@ export class AuthService {
         `Contraseña cambiada exitosamente para usuario con email: ${email}`,
       );
       this.logger.log(`Se generan nuevos tokens`);
-      const { access_token, refresh_token } = await this.login(user);
+      const { access_token, refresh_token, expires_in } =
+        await this.login(user);
       return {
         user,
         access_token,
         refresh_token,
+        expires_in,
       };
     } catch (error) {
       this.logger.error(
